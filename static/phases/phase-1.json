@@ -1,0 +1,48 @@
+{
+	"id": "phase-1",
+	"name": "First Steps",
+	"maxPerPlatform": 4,
+	"platforms": [
+		{
+			"type": "neutral",
+			"spheres": [
+				"earth",
+				"air",
+				"fire",
+				"water"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"fire",
+				"fire"
+			]
+		},
+		{
+			"type": "water",
+			"spheres": [
+				"water",
+				"water"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"air",
+				"earth",
+				"earth",
+				"fire"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"air",
+				"air",
+				"water",
+				"earth"
+			]
+		}
+	]
+}

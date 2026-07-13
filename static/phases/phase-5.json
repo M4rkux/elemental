@@ -1,0 +1,48 @@
+{
+	"id": "phase-5",
+	"name": "Rising Flames",
+	"maxPerPlatform": 4,
+	"platforms": [
+		{
+			"type": "neutral",
+			"spheres": [
+				"fire",
+				"fire",
+				"air",
+				"fire"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"fire",
+				"air",
+				"earth",
+				"water"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"air",
+				"water",
+				"air"
+			]
+		},
+		{
+			"type": "water",
+			"spheres": [
+				"water",
+				"earth"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"earth",
+				"earth",
+				"water"
+			]
+		}
+	]
+}

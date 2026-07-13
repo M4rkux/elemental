@@ -1,0 +1,48 @@
+{
+	"id": "phase-2",
+	"name": "Gentle Breeze",
+	"maxPerPlatform": 4,
+	"platforms": [
+		{
+			"type": "neutral",
+			"spheres": [
+				"fire",
+				"air",
+				"fire",
+				"air"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"earth",
+				"fire",
+				"air",
+				"earth"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"earth"
+			]
+		},
+		{
+			"type": "neutral",
+			"spheres": [
+				"water",
+				"earth",
+				"water"
+			]
+		},
+		{
+			"type": "fire",
+			"spheres": [
+				"fire",
+				"water",
+				"water",
+				"air"
+			]
+		}
+	]
+}
