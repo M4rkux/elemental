@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { GameEngine } from '$lib/game/engine.svelte';
+	import { grabSound } from '$lib/game/sfx';
 	import type { Element, LevelData } from '$lib/game/types';
 	import ElementPiece from './ElementPiece.svelte';
 	import Platform from './Platform.svelte';
@@ -39,6 +40,9 @@
 		return () => clearTimeout(timer);
 	});
 
+	// The board can unmount mid-drag (restart remounts it); cut the sound too.
+	$effect(() => () => grabSound.release());
+
 	let drag = $state<Drag | null>(null);
 	let dropTarget = $state<number | null>(null);
 	let platformEls: (HTMLElement | undefined)[] = $state([]);
@@ -57,6 +61,7 @@
 			offsetY: event.clientY - rect.top
 		};
 		dropTarget = null;
+		void grabSound.grab(drag.group[0]);
 	}
 
 	function targetAt(x: number, y: number): number | null {
@@ -80,6 +85,7 @@
 
 	function onPointerUp() {
 		if (!drag) return;
+		grabSound.release();
 		if (dropTarget !== null) {
 			engine.move(drag.from, drag.index, dropTarget);
 		}
