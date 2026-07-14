@@ -1,0 +1,59 @@
+{
+	"number": 20,
+	"stage": 2,
+	"name": "Veil of Elements",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "air",
+				"elements": [
+					"air",
+					"water",
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire",
+					"air",
+					"air"
+				],
+				"hidden": [
+					0,
+					1,
+					2
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth"
+				],
+				"hidden": [
+					0
+				]
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"air",
+					"water",
+					"earth"
+				]
+			}
+		]
+	}
+}

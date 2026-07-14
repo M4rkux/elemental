@@ -5,7 +5,8 @@
 		"moduleResolution": "bundler",
 		"types": ["bun"],
 		"strict": true,
+		"skipLibCheck": true,
 		"noEmit": true
 	},
-	"include": ["./**/*.ts", "../src/lib/game/types.ts"]
+	"include": ["./**/*.ts", "../src/lib/game/types.ts", "../src/lib/server/db/schema.ts"]
 }

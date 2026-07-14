@@ -1,0 +1,57 @@
+{
+	"number": 18,
+	"stage": 2,
+	"name": "Phantom Gale",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"earth",
+					"air",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"fire",
+					"air"
+				],
+				"hidden": [
+					2
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire",
+					"water",
+					"air"
+				],
+				"hidden": [
+					2
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				]
+			}
+		]
+	}
+}

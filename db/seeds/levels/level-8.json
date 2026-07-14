@@ -1,0 +1,51 @@
+{
+	"number": 8,
+	"stage": 1,
+	"name": "Wild Gale",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"water",
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "earth",
+				"elements": [
+					"earth",
+					"earth",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"earth",
+					"air"
+				]
+			}
+		]
+	}
+}

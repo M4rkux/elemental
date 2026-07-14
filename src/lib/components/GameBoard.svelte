@@ -1,19 +1,19 @@
 <script lang="ts">
 	import { GameEngine } from '$lib/game/engine.svelte';
-	import type { Element, PhaseData } from '$lib/game/types';
+	import type { Element, LevelData } from '$lib/game/types';
+	import ElementPiece from './ElementPiece.svelte';
 	import Platform from './Platform.svelte';
-	import Sphere from './Sphere.svelte';
 
 	let {
-		phase,
+		level,
 		nextHref,
 		onwin,
 		onrestart
-	}: { phase: PhaseData; nextHref?: string; onwin?: () => void; onrestart: () => void } = $props();
+	}: { level: LevelData; nextHref?: string; onwin?: () => void; onrestart: () => void } = $props();
 
-	// The board is remounted (keyed) for restarts, so reading `phase` once is intentional.
+	// The board is remounted (keyed) for restarts, so reading `level` once is intentional.
 	// svelte-ignore state_referenced_locally
-	const engine = new GameEngine(phase);
+	const engine = new GameEngine(level);
 
 	interface Drag {
 		from: number;
@@ -25,8 +25,18 @@
 		offsetY: number;
 	}
 
+	// Matches the platform completion animation in Platform.svelte:
+	// 250ms base fill + 450ms rope fill, plus a small buffer.
+	const WIN_ANIMATION_MS = 750;
+
+	let showWin = $state(false);
+
 	$effect(() => {
-		if (engine.won) onwin?.();
+		if (!engine.won) return;
+		onwin?.();
+		// The win overlay waits for the last platform's fill animation.
+		const timer = setTimeout(() => (showWin = true), WIN_ANIMATION_MS);
+		return () => clearTimeout(timer);
 	});
 
 	let drag = $state<Drag | null>(null);
@@ -89,7 +99,7 @@
 	<header class="hud">
 		<a class="hud-button plank" href="/">Menu</a>
 		<div class="hud-title">
-			<h1>{engine.phaseName}</h1>
+			<h1>{engine.levelName}</h1>
 			<p>Moves: {engine.moves}</p>
 		</div>
 		<div class="hud-actions">
@@ -105,10 +115,10 @@
 	</header>
 
 	<div class="platforms">
-		{#each engine.platforms as spheres, i (i)}
+		{#each engine.platforms as slots, i (i)}
 			<Platform
 				type={engine.platformTypes[i]}
-				{spheres}
+				{slots}
 				maxPerPlatform={engine.maxPerPlatform}
 				complete={engine.isComplete(i)}
 				pickable={(index) => !drag && !engine.won && engine.canPick(i, index)}
@@ -123,12 +133,12 @@
 	{#if drag}
 		<div class="ghost" style:left="{drag.x - drag.offsetX}px" style:top="{drag.y - drag.offsetY}px">
 			{#each drag.group as element, i (i)}
-				<Sphere {element} grabbed />
+				<ElementPiece {element} grabbed />
 			{/each}
 		</div>
 	{/if}
 
-	{#if engine.won}
+	{#if showWin}
 		<div class="win-overlay">
 			<div class="win-panel plank">
 				<h2>Elements in harmony!</h2>

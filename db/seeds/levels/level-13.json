@@ -1,0 +1,57 @@
+{
+	"number": 13,
+	"stage": 2,
+	"name": "Shrouded Grove",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire",
+					"air",
+					"fire"
+				],
+				"hidden": [
+					2
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"air",
+					"earth"
+				],
+				"hidden": [
+					2
+				]
+			}
+		]
+	}
+}

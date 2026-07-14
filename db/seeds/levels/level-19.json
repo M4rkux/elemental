@@ -1,0 +1,57 @@
+{
+	"number": 19,
+	"stage": 2,
+	"name": "Twilight Stones",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"fire"
+				],
+				"hidden": [
+					0
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air",
+					"earth",
+					"earth"
+				],
+				"hidden": [
+					2
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"air",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"air"
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,54 @@
+{
+	"number": 11,
+	"stage": 2,
+	"name": "Veiled Balance",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"fire",
+					"air",
+					"earth"
+				],
+				"hidden": [
+					0
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"water",
+					"fire"
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,51 @@
+{
+	"number": 7,
+	"stage": 1,
+	"name": "Deep Currents",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "earth",
+				"elements": [
+					"earth",
+					"earth",
+					"fire",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"fire",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"fire",
+					"earth",
+					"air"
+				]
+			}
+		]
+	}
+}

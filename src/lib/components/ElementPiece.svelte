@@ -1,25 +1,26 @@
 <script lang="ts">
-	import type { Element } from '$lib/game/types';
+	import type { ElementFace } from '$lib/game/types';
 	import ElementIcon from './ElementIcon.svelte';
 
-	let { element, grabbed = false }: { element: Element; grabbed?: boolean } = $props();
+	let { element, grabbed = false }: { element: ElementFace; grabbed?: boolean } = $props();
 </script>
 
 <div
-	class="sphere"
+	class="element"
 	class:grabbed
 	class:earth={element === 'earth'}
 	class:fire={element === 'fire'}
 	class:water={element === 'water'}
 	class:air={element === 'air'}
+	class:mystery={element === 'mystery'}
 >
 	<ElementIcon {element} />
 </div>
 
 <style lang="scss">
-	.sphere {
-		width: var(--sphere-size, 3.25rem);
-		height: var(--sphere-size, 3.25rem);
+	.element {
+		width: var(--element-size, 3.25rem);
+		height: var(--element-size, 3.25rem);
 		display: grid;
 		place-items: center;
 		border-radius: 50%;
@@ -49,6 +50,9 @@
 		}
 		&.air {
 			background: radial-gradient(circle at 35% 30%, var(--element-air-light), var(--element-air) 75%);
+		}
+		&.mystery {
+			background: radial-gradient(circle at 35% 30%, var(--element-mystery-light), var(--element-mystery) 70%);
 		}
 	}
 </style>

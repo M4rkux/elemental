@@ -1,0 +1,51 @@
+{
+	"number": 1,
+	"stage": 1,
+	"name": "First Steps",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"fire",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"earth",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"air",
+					"water",
+					"earth"
+				]
+			}
+		]
+	}
+}

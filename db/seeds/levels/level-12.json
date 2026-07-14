@@ -1,0 +1,57 @@
+{
+	"number": 12,
+	"stage": 2,
+	"name": "Whispering Mist",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"earth",
+					"water"
+				],
+				"hidden": [
+					2
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"fire",
+					"fire"
+				],
+				"hidden": [
+					1
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"air",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"water",
+					"earth"
+				]
+			}
+		]
+	}
+}

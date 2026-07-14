@@ -1,0 +1,51 @@
+{
+	"number": 5,
+	"stage": 1,
+	"name": "Rising Flames",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air",
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"earth",
+					"water"
+				]
+			}
+		]
+	}
+}

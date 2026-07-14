@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { Element } from '$lib/game/types';
+	import type { ElementFace } from '$lib/game/types';
 
-	let { element }: { element: Element } = $props();
+	let { element }: { element: ElementFace } = $props();
 </script>
 
 <!--
 	Element glyphs: solid Pokemon-badge silhouettes carved with Avatar-style
-	spirals. Carve strokes reuse the sphere's base color so they read as cuts.
+	spirals. Carve strokes reuse the element piece's base color so they read as cuts.
 -->
 {#if element === 'earth'}
 	<svg viewBox="0 0 100 100" aria-hidden="true">
@@ -48,13 +48,21 @@
 			<path d="M18 78 C30 70 42 70 53 76 C64 82 74 82 82 74" />
 		</g>
 	</svg>
-{:else}
+{:else if element === 'air'}
 	<svg viewBox="0 0 100 100" aria-hidden="true">
 		<g fill="none" stroke="#47707e" stroke-width="6" stroke-linecap="round">
 			<path d="M50 40 A14 14 0 0 1 22 40 A10 10 0 0 1 42 40 A6 6 0 0 1 30 40" />
 			<path d="M77 54 A11 11 0 0 1 55 54 A8 8 0 0 1 71 54 A5 5 0 0 1 61 54" />
 			<path d="M54 72 A10 10 0 0 1 34 72 A7 7 0 0 1 48 72 A4 4 0 0 1 40 72" />
 		</g>
+	</svg>
+{:else}
+	<!-- Mystery: a hidden element, shown as a question mark until revealed. -->
+	<svg viewBox="0 0 100 100" aria-hidden="true">
+		<g fill="none" stroke="#d9c6f5" stroke-width="9" stroke-linecap="round">
+			<path d="M33 34 A17 17 0 1 1 50 53 L50 64" />
+		</g>
+		<circle cx="50" cy="81" r="6.5" fill="#d9c6f5" />
 	</svg>
 {/if}
 

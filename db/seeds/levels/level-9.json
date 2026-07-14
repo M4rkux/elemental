@@ -1,0 +1,51 @@
+{
+	"number": 9,
+	"stage": 1,
+	"name": "Stone Circle",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "air",
+				"elements": [
+					"air",
+					"earth",
+					"earth",
+					"earth"
+				]
+			}
+		]
+	}
+}

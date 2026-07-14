@@ -1,0 +1,55 @@
+{
+	"number": 16,
+	"stage": 2,
+	"name": "Buried Secrets",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"fire"
+				],
+				"hidden": [
+					0,
+					1
+				]
+			},
+			{
+				"type": "air",
+				"elements": [
+					"air",
+					"earth",
+					"air",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"fire",
+					"water",
+					"fire"
+				]
+			}
+		]
+	}
+}

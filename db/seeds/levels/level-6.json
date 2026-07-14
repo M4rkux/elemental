@@ -1,0 +1,51 @@
+{
+	"number": 6,
+	"stage": 1,
+	"name": "Shifting Sands",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"fire",
+					"air",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"earth",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air"
+				]
+			}
+		]
+	}
+}

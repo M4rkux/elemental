@@ -1,0 +1,51 @@
+{
+	"number": 2,
+	"stage": 1,
+	"name": "Gentle Breeze",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air",
+					"fire",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"fire",
+					"air",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"water",
+					"water",
+					"air"
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,51 @@
+{
+	"number": 3,
+	"stage": 1,
+	"name": "Ember Path",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"water",
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"fire",
+					"air"
+				]
+			}
+		]
+	}
+}

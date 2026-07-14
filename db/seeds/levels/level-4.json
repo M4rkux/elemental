@@ -1,0 +1,51 @@
+{
+	"number": 4,
+	"stage": 1,
+	"name": "River Stones",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "air",
+				"elements": [
+					"air",
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"earth",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"fire",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth",
+					"fire",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				]
+			}
+		]
+	}
+}

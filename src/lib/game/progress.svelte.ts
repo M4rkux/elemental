@@ -1,55 +1,57 @@
-import { browser } from '$app/environment';
-import { PHASES } from './phases';
+import { browser } from "$app/environment";
 
-const STORAGE_KEY = 'elemental.progress.v1';
+// v2: completed level numbers; v1 stored phase id strings.
+const STORAGE_KEY = "elemental.progress.v2";
 
 /**
- * Campaign progress persisted in localStorage. Phases unlock in order: a phase
- * is playable only when the previous one has been completed.
+ * Campaign progress persisted in localStorage. Levels unlock in order: a level
+ * is playable only when the previous number has been completed.
  */
 class Progress {
-	completed = $state<string[]>([]);
+  completed = $state<number[]>([]);
 
-	constructor() {
-		if (!browser) return;
-		try {
-			const raw = localStorage.getItem(STORAGE_KEY);
-			if (raw) {
-				const parsed: unknown = JSON.parse(raw);
-				if (Array.isArray(parsed)) {
-					this.completed = parsed.filter((id): id is string => typeof id === 'string');
-				}
-			}
-		} catch {
-			// Corrupted storage; start fresh.
-		}
-	}
+  constructor() {
+    if (!browser) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          this.completed = parsed.filter(
+            (n): n is number => typeof n === "number",
+          );
+        }
+      }
+    } catch {
+      // Corrupted storage; start fresh.
+    }
+  }
 
-	isCompleted(id: string): boolean {
-		return this.completed.includes(id);
-	}
+  isCompleted(number: number): boolean {
+    return this.completed.includes(number);
+  }
 
-	isUnlocked(id: string): boolean {
-		const index = PHASES.findIndex((p) => p.id === id);
-		if (index === -1) return false;
-		return index === 0 || this.isCompleted(PHASES[index - 1].id);
-	}
+  isUnlocked(number: number): boolean {
+    return number === 1 || this.isCompleted(number - 1);
+  }
 
-	complete(id: string): void {
-		if (this.isCompleted(id)) return;
-		this.completed = [...this.completed, id];
-		if (!browser) return;
-		try {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(this.completed));
-		} catch {
-			// Storage full or unavailable; progress just won't persist.
-		}
-	}
+  complete(number: number): void {
+    if (this.isCompleted(number)) return;
+    this.completed = [...this.completed, number];
+    if (!browser) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.completed));
+    } catch {
+      // Storage full or unavailable; progress just won't persist.
+    }
+  }
 
-	/** First unfinished phase; falls back to the first phase when everything is done. */
-	get current(): (typeof PHASES)[number] {
-		return PHASES.find((p) => !this.isCompleted(p.id)) ?? PHASES[0];
-	}
+  /** First unfinished level number; falls back to the last when everything is done. */
+  firstUnfinished(numbers: number[]): number {
+    return (
+      numbers.find((n) => !this.isCompleted(n)) ?? numbers[numbers.length - 1]
+    );
+  }
 }
 
 export const progress = new Progress();

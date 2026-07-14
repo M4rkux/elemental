@@ -1,0 +1,57 @@
+{
+	"number": 14,
+	"stage": 2,
+	"name": "Silent Depths",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"fire",
+					"earth",
+					"earth"
+				],
+				"hidden": [
+					1
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air"
+				],
+				"hidden": [
+					0
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"water",
+					"water"
+				]
+			}
+		]
+	}
+}

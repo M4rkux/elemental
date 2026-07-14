@@ -1,11 +1,11 @@
 <script lang="ts">
 	import ElementIcon from './ElementIcon.svelte';
-	import Sphere from './Sphere.svelte';
-	import type { Element, PlatformType } from '$lib/game/types';
+	import ElementPiece from './ElementPiece.svelte';
+	import type { ElementSlot, PlatformType } from '$lib/game/types';
 
 	let {
 		type,
-		spheres,
+		slots,
 		maxPerPlatform,
 		complete,
 		pickable,
@@ -15,16 +15,21 @@
 		el = $bindable()
 	}: {
 		type: PlatformType;
-		spheres: Element[];
+		slots: ElementSlot[];
 		maxPerPlatform: number;
 		complete: boolean;
 		pickable: (index: number) => boolean;
-		/** While a drag is in progress, spheres from this index down are lifted off the rope. */
+		/** While a drag is in progress, elements from this index down are lifted off the rope. */
 		hiddenFrom?: number | null;
 		dropState?: 'valid' | 'invalid' | null;
 		onGrab: (index: number, event: PointerEvent) => void;
 		el?: HTMLElement;
 	} = $props();
+
+	// The color a completed platform (base and rope) fills with.
+	let completeTint = $derived(
+		complete && slots.length > 0 ? `var(--element-${slots[0].element})` : null
+	);
 </script>
 
 <div
@@ -33,10 +38,12 @@
 	class:platform--invalid={dropState === 'invalid'}
 	class:platform--complete={complete}
 	style:--slots={maxPerPlatform}
+	style:--complete-tint={completeTint}
 	bind:this={el}
 >
 	<div
 		class="base plank"
+		class:base--complete={complete}
 		class:base--tinted={type !== 'neutral'}
 		class:base--earth={type === 'earth'}
 		class:base--fire={type === 'fire'}
@@ -48,23 +55,20 @@
 				<ElementIcon element={type} />
 			</span>
 		{/if}
-		{#if complete}
-			<span class="check">✓</span>
-		{/if}
 	</div>
 
 	<div class="rope-area">
 		<div class="rope"></div>
-		{#each spheres as element, i (i)}
+		{#each slots as slot, i (i)}
 			<button
 				type="button"
 				class="slot"
 				class:slot--lifted={hiddenFrom !== null && i >= hiddenFrom}
 				class:slot--pickable={pickable(i)}
-				aria-label="{element} sphere"
+				aria-label={slot.revealed ? `${slot.element} element` : 'mystery element'}
 				onpointerdown={(e) => onGrab(i, e)}
 			>
-				<Sphere {element} />
+				<ElementPiece element={slot.revealed ? slot.element : 'mystery'} />
 			</button>
 		{/each}
 	</div>
@@ -90,6 +94,16 @@
 
 		&--complete .rope-area {
 			filter: saturate(1.15) brightness(1.05);
+		}
+
+		// Once the base fill lands, the color continues sweeping down the rope.
+		&--complete .rope::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: inherit;
+			background: var(--complete-tint);
+			animation: fill-down 450ms ease-in 250ms both;
 		}
 	}
 
@@ -121,6 +135,39 @@
 		&--air {
 			--tint: var(--element-air-light);
 		}
+
+		// Completed platforms fill with the element's color and look pressed
+		// in: the plank's top light is swapped for an inner shadow. The fill
+		// sweeps top to bottom before continuing down the rope. It lives in
+		// ::before (::after holds the restricted tint) so the badge, a later
+		// sibling with the same z-index, still paints on top.
+		&--complete {
+			border: none;
+			box-shadow: 0 4px 10px rgba(40, 20, 5, 0.45);
+
+			&::before {
+				content: '';
+				position: absolute;
+				inset: 0;
+				z-index: 1;
+				border-radius: inherit;
+				background: var(--complete-tint);
+				box-shadow:
+					inset 0 4px 8px rgba(0, 0, 0, 0.45),
+					inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+				animation: fill-down 250ms ease-out both;
+			}
+		}
+	}
+
+	// Reveals the element color from top to bottom.
+	@keyframes fill-down {
+		from {
+			clip-path: inset(0 0 100% 0);
+		}
+		to {
+			clip-path: inset(0 0 0 0);
+		}
 	}
 
 	.badge {
@@ -135,16 +182,6 @@
 		display: flex;
 	}
 
-	.check {
-		position: absolute;
-		top: 50%;
-		right: 0.35rem;
-		translate: 0 -50%;
-		font-weight: 700;
-		color: #2e6b1f;
-		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-	}
-
 	.rope-area {
 		position: relative;
 		display: flex;
@@ -152,7 +189,7 @@
 		align-items: center;
 		gap: 0.3rem;
 		padding-top: 0.35rem;
-		// Room for a full rope of spheres (3.25rem sphere + 0.3rem gap each),
+		// Room for a full rope of elements (3.25rem piece + 0.3rem gap each),
 		// so drops on empty space still hit the platform.
 		min-height: calc(var(--slots) * 3.55rem + 1rem);
 		width: 100%;

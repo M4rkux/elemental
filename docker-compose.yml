@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: elemental
+      POSTGRES_PASSWORD: elemental
+      POSTGRES_DB: elemental
+    ports:
+      # Host port 5433: 5432 tends to be taken by other local Postgres instances.
+      - '5433:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U elemental -d elemental']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:

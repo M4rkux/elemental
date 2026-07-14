@@ -1,0 +1,51 @@
+{
+	"number": 10,
+	"stage": 1,
+	"name": "Balance of Two",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "air",
+				"elements": [
+					"air",
+					"air",
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "earth",
+				"elements": [
+					"earth",
+					"air",
+					"fire",
+					"water"
+				]
+			}
+		]
+	}
+}
