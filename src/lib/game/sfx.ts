@@ -5,6 +5,8 @@ const GRAB_SOUNDS: Partial<Record<Element, { intro: string; loop: string }>> = {
   // fire: { intro: '/sfx/fire_intro.wav', loop: '/sfx/fire_loop.wav' }
   fire: { intro: "/sfx/fogo-bruno.mpeg", loop: "/sfx/fogo-bruno.mpeg" },
   earth: { intro: "/sfx/pedra-bruno.mpeg", loop: "/sfx/pedra-bruno.mpeg" },
+  air: { intro: "/sfx/vento-bruno.mpeg", loop: "/sfx/vento-bruno.mpeg" },
+  water: { intro: "/sfx/agua-bruno.mpeg", loop: "/sfx/agua-bruno.mpeg" },
 };
 
 interface GrabBuffers {

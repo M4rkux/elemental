@@ -2,6 +2,7 @@
   import { GameEngine } from "$lib/game/engine.svelte";
   import { grabSound } from "$lib/game/sfx";
   import type { Element, LevelData } from "$lib/game/types";
+  import ElementParticles from "./ElementParticles.svelte";
   import ElementPiece from "./ElementPiece.svelte";
   import Platform from "./Platform.svelte";
 
@@ -57,6 +58,43 @@
   let dropTarget = $state<number | null>(null);
   let platformEls: (HTMLElement | undefined)[] = $state([]);
 
+  interface Burst {
+    id: number;
+    x: number;
+    y: number;
+    element: Element;
+  }
+
+  let bursts = $state<Burst[]>([]);
+  let nextBurstId = 0;
+
+  // Layout constants from Platform/ElementPiece styles, used to aim the
+  // placement burst at the middle of the just-dropped group.
+  const BASE_REM = 1.9 + 0.35; // platform base + rope-area top padding
+  const SLOT_REM = 3.55; // piece (3.25) + gap (0.3)
+
+  /** Fires a short particle burst centered on the group just placed. */
+  function spawnBurst(platform: number, element: Element, count: number) {
+    const el = platformEls[platform];
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const firstPlaced = engine.platforms[platform].length - count;
+    const centerSlot = firstPlaced + (count - 1) / 2;
+    const id = nextBurstId++;
+    bursts = [
+      ...bursts,
+      {
+        id,
+        element,
+        x: rect.left + rect.width / 2,
+        y: rect.top + (BASE_REM + (centerSlot + 0.5) * SLOT_REM) * rem,
+      },
+    ];
+    // Longest particle: 0.05s delay + 0.5s duration; drop well after that.
+    setTimeout(() => (bursts = bursts.filter((b) => b.id !== id)), 700);
+  }
+
   function grab(platform: number, index: number, event: PointerEvent) {
     if (engine.won || drag || !engine.canPick(platform, index)) return;
     event.preventDefault();
@@ -101,8 +139,8 @@
   function onPointerUp() {
     if (!drag) return;
     grabSound.release();
-    if (dropTarget !== null) {
-      engine.move(drag.from, drag.index, dropTarget);
+    if (dropTarget !== null && engine.move(drag.from, drag.index, dropTarget)) {
+      spawnBurst(dropTarget, drag.group[0], drag.group.length);
     }
     drag = null;
     dropTarget = null;
@@ -128,8 +166,8 @@
       <h1>Level {engine.levelNumber}</h1>
       <p>Moves: {engine.moves}</p>
     </div>
-    <a class="hud-button plank" href="/">Menu</a>
     <div class="hud-actions">
+      <a class="hud-button plank" href="/">Menu</a>
       <button
         class="hud-button plank"
         disabled={!engine.canUndo}
@@ -168,6 +206,12 @@
       {/each}
     </div>
   {/if}
+
+  {#each bursts as burst (burst.id)}
+    <div class="burst-anchor" style:left="{burst.x}px" style:top="{burst.y}px">
+      <ElementParticles element={burst.element} mode="burst" />
+    </div>
+  {/each}
 
   {#if showWin}
     <div class="win-overlay">
@@ -281,6 +325,14 @@
     flex-direction: column;
     align-items: center;
     gap: 0.3rem;
+    pointer-events: none;
+  }
+
+  .burst-anchor {
+    position: fixed;
+    z-index: 60;
+    width: 0;
+    height: 0;
     pointer-events: none;
   }
 

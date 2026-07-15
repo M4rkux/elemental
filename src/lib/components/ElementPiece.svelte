@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ElementFace } from '$lib/game/types';
 	import ElementIcon from './ElementIcon.svelte';
+	import ElementParticles from './ElementParticles.svelte';
 
 	let { element, grabbed = false }: { element: ElementFace; grabbed?: boolean } = $props();
 </script>
@@ -15,10 +16,15 @@
 	class:mystery={element === 'mystery'}
 >
 	<ElementIcon {element} animated={grabbed} />
+	{#if grabbed && element !== 'mystery'}
+		<!-- Fire and air particles float up; earth and water particles sink. -->
+		<ElementParticles {element} mode={element === 'fire' || element === 'air' ? 'rise' : 'fall'} />
+	{/if}
 </div>
 
 <style lang="scss">
 	.element {
+		position: relative;
 		width: var(--element-size, 3.25rem);
 		height: var(--element-size, 3.25rem);
 		display: grid;
