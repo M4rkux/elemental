@@ -14,7 +14,7 @@
 	class:air={element === 'air'}
 	class:mystery={element === 'mystery'}
 >
-	<ElementIcon {element} />
+	<ElementIcon {element} animated={grabbed} />
 </div>
 
 <style lang="scss">
