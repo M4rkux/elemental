@@ -1,55 +1,144 @@
-// Wood-themed palette shared by the whole game.
+// Twilight-elemental palette shared by the whole game.
 
 :root {
-	// Wood tones
-	--wood-darkest: #3e2413;
-	--wood-dark: #5d3a1a;
-	--wood-mid: #8a5a2e;
-	--wood-light: #b07d4a;
-	--wood-lighter: #d2a56d;
-	--wood-highlight: #eccb96;
+	// Backdrop
+	--bg-top: #1d2947;
+	--bg-mid: #131b32;
+	--bg-deep: #0c1122;
+
+	// Ink (text)
+	--ink: #e8ecf7;
+	--ink-dim: rgba(214, 224, 245, 0.65);
+	--ink-dimmer: rgba(214, 224, 245, 0.5);
+	--ink-faint: rgba(214, 224, 245, 0.35);
+
+	// Gold accents (titles, primary actions)
+	--gold-1: #fff6e2;
+	--gold-2: #ffd9a0;
+	--gold-3: #c99b5a;
+	--gold-btn-1: #ffe6b3;
+	--gold-btn-2: #f0b45e;
+	--gold-ink: #1a1206;
+
+	// Glass surfaces (secondary buttons, chrome)
+	--glass-bg: rgba(255, 255, 255, 0.06);
+	--glass-bg-hover: rgba(255, 255, 255, 0.13);
+	--glass-border: rgba(255, 255, 255, 0.16);
+	--glass-border-hover: rgba(255, 230, 180, 0.4);
+
+	// Panels (modals)
+	--panel-bg: linear-gradient(180deg, rgba(30, 40, 70, 0.9), rgba(16, 22, 42, 0.94));
+	--panel-border: rgba(255, 225, 170, 0.3);
+
+	// Rope
+	--rope-color: rgba(200, 215, 255, 0.4);
+	--rope-glow: rgba(160, 190, 255, 0.25);
 
 	// Element colors
 	--element-earth: #7c4a1e;
 	--element-earth-light: #a86f3d;
+	--element-earth-glow: rgba(124, 74, 30, 0.5);
 	--element-fire: #d93b25;
 	--element-fire-light: #ff7a52;
+	--element-fire-glow: rgba(217, 59, 37, 0.55);
 	--element-water: #2670c9;
 	--element-water-light: #6db4f2;
+	--element-water-glow: rgba(38, 112, 201, 0.5);
 	--element-air: #efe9dc;
 	--element-air-light: #ffffff;
+	--element-air-glow: rgba(239, 233, 220, 0.5);
 	--element-mystery: #3c2158;
 	--element-mystery-light: #7a4bb0;
+	--element-mystery-glow: rgba(60, 33, 88, 0.6);
 }
 
 body {
 	min-height: 100vh;
-	background:
-		radial-gradient(ellipse at 50% -20%, rgba(255, 230, 180, 0.35), transparent 60%),
-		linear-gradient(160deg, var(--wood-light), var(--wood-mid) 55%, var(--wood-dark));
+	background: radial-gradient(130% 95% at 50% 0%, var(--bg-top) 0%, var(--bg-mid) 48%, var(--bg-deep) 100%);
 	background-attachment: fixed;
-	color: var(--wood-darkest);
-	font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+	color: var(--ink);
+	font-family: 'Alegreya Sans', system-ui, sans-serif;
 }
 
-// Wood plank surface, reused for bases, buttons and panels.
-@mixin plank {
-	background:
-		repeating-linear-gradient(
-			90deg,
-			rgba(62, 36, 19, 0.12) 0px,
-			rgba(62, 36, 19, 0.12) 2px,
-			transparent 2px,
-			transparent 18px
-		),
-		linear-gradient(180deg, var(--wood-lighter), var(--wood-mid));
-	border: 3px solid var(--wood-dark);
-	border-radius: 10px;
+// Frosted glass surface, used for secondary buttons and chrome.
+@mixin glass {
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 12px;
+	color: var(--ink);
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover:not(:disabled) {
+		background: var(--glass-bg-hover);
+		border-color: var(--glass-border-hover);
+	}
+}
+
+.glass {
+	@include glass;
+}
+
+// Gold gradient pill, used for primary calls to action.
+@mixin gold-pill {
+	font-family: 'Alegreya Sans', sans-serif;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--gold-ink);
+	background: linear-gradient(180deg, var(--gold-btn-1), var(--gold-btn-2));
+	border: 1px solid rgba(255, 240, 200, 0.7);
+	border-radius: 999px;
+	box-shadow: 0 8px 26px rgba(240, 180, 94, 0.35);
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 12px 34px rgba(240, 180, 94, 0.5);
+	}
+
+	&:active {
+		transform: translateY(0);
+	}
+}
+
+.gold-pill {
+	@include gold-pill;
+}
+
+// Modal / floating panel surface.
+@mixin panel {
+	background: var(--panel-bg);
+	border: 1px solid var(--panel-border);
+	border-radius: 24px;
 	box-shadow:
-		inset 0 2px 0 rgba(255, 240, 210, 0.5),
-		0 4px 10px rgba(40, 20, 5, 0.45);
+		0 30px 80px rgba(0, 0, 0, 0.5),
+		0 0 60px rgba(255, 210, 130, 0.12);
 }
 
-.plank {
-	@include plank;
+.panel {
+	@include panel;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes riseIn {
+	from {
+		opacity: 0;
+		transform: translateY(22px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }

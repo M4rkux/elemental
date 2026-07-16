@@ -1,6 +1,11 @@
 <script lang="ts">
   import { GameEngine } from "$lib/game/engine.svelte";
-  import { grabSound } from "$lib/game/sfx";
+  import {
+    completeSound,
+    grabSound,
+    revealSound,
+    tapSound,
+  } from "$lib/game/sfx";
   import type { Element, LevelData } from "$lib/game/types";
   import ElementParticles from "./ElementParticles.svelte";
   import ElementPiece from "./ElementPiece.svelte";
@@ -51,7 +56,40 @@
   // remounts it); cut the sound too.
   $effect(() => {
     grabSound.preload();
+    tapSound.preload();
+    revealSound.preload();
+    completeSound.preload();
     return () => grabSound.release();
+  });
+
+  // A reveal plays in two stages: the slot keeps its mystery face for a
+  // short beat, then the spin-in + burst ring + sound land together. The
+  // engine marker is cleared once the whole sequence is done.
+  const REVEAL_DELAY_MS = 200;
+  const REVEAL_ANIMATION_MS = 950;
+
+  let maskedReveal = $state<{ platform: number; index: number } | null>(null);
+  let activeReveal = $state<{ platform: number; index: number } | null>(null);
+
+  $effect(() => {
+    const reveal = engine.lastReveal;
+    if (!reveal) return;
+    maskedReveal = reveal;
+    const show = setTimeout(() => {
+      maskedReveal = null;
+      activeReveal = reveal;
+      void revealSound.play();
+    }, REVEAL_DELAY_MS);
+    const done = setTimeout(() => {
+      activeReveal = null;
+      engine.lastReveal = null;
+    }, REVEAL_DELAY_MS + REVEAL_ANIMATION_MS);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(done);
+      maskedReveal = null;
+      activeReveal = null;
+    };
   });
 
   let drag = $state<Drag | null>(null);
@@ -141,6 +179,12 @@
     grabSound.release();
     if (dropTarget !== null && engine.move(drag.from, drag.index, dropTarget)) {
       spawnBurst(dropTarget, drag.group[0], drag.group.length);
+      void tapSound.play();
+      // Complete platforms reject drops, so completeness here means the
+      // move just sealed the platform.
+      if (engine.isComplete(dropTarget)) {
+        void completeSound.play(drag.group[0]);
+      }
     }
     drag = null;
     dropTarget = null;
@@ -163,19 +207,22 @@
 <div class="board" class:board--dragging={drag !== null}>
   <header class="hud">
     <div class="hud-title">
-      <h1>Level {engine.levelNumber}</h1>
-      <p>Moves: {engine.moves}</p>
+      <h1>
+        Level {engine.levelNumber}
+        <span class="level-name">· {engine.levelName}</span>
+      </h1>
+      <p>Moves&nbsp;&nbsp;{engine.moves}</p>
     </div>
     <div class="hud-actions">
-      <a class="hud-button plank" href="/">Menu</a>
+      <a class="hud-button glass" href="/">Menu</a>
       <button
-        class="hud-button plank"
+        class="hud-button glass"
         disabled={!engine.canUndo}
         onclick={() => engine.undo()}
       >
         Undo
       </button>
-      <button class="hud-button plank" onclick={onrestart}>Restart</button>
+      <button class="hud-button glass" onclick={onrestart}>Restart</button>
     </div>
   </header>
 
@@ -186,8 +233,13 @@
         {slots}
         maxPerPlatform={engine.maxPerPlatform}
         complete={engine.isComplete(i)}
+        lockedCount={engine.lockedCount(i)}
         pickable={(index) => !drag && !engine.won && engine.canPick(i, index)}
         hiddenFrom={drag?.from === i ? drag.index : null}
+        maskedIndex={maskedReveal?.platform === i ? maskedReveal.index : null}
+        revealingIndex={activeReveal?.platform === i
+          ? activeReveal.index
+          : null}
         dropState={dropStateFor(i)}
         onGrab={(index, event) => grab(i, index, event)}
         bind:el={platformEls[i]}
@@ -215,19 +267,20 @@
 
   {#if showWin}
     <div class="win-overlay">
-      <div class="win-panel plank">
-        <h2>Elements in harmony!</h2>
-        <p>Sorted in {engine.moves} moves.</p>
+      <div class="win-panel panel">
+        <div class="win-eyebrow">Level {engine.levelNumber} complete</div>
+        <h2>Balance Restored</h2>
+        <p>Solved in {engine.moves} moves</p>
         <div class="win-actions">
           {#if nextHref}
-            <a class="hud-button hud-button--primary plank" href={nextHref}
+            <a class="hud-button hud-button--primary gold-pill" href={nextHref}
               >Next level</a
             >
           {/if}
-          <button class="hud-button plank" onclick={onrestart}
+          <button class="hud-button glass" onclick={onrestart}
             >Play again</button
           >
-          <a class="hud-button plank" href="/">Menu</a>
+          <a class="hud-button glass" href="/">Menu</a>
         </div>
       </div>
     </div>
@@ -236,7 +289,7 @@
 
 <style lang="scss">
   .board {
-    max-width: 42rem;
+    max-width: 64rem;
     margin: 0 auto;
     padding: 1rem;
     user-select: none;
@@ -252,23 +305,30 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-wrap: wrap;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
   }
 
   .hud-title {
-    text-align: center;
-
     h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--wood-highlight);
-      text-shadow: 0 2px 3px rgba(40, 20, 5, 0.6);
+      font-family: "Marcellus", serif;
+      font-size: 1.3rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: var(--gold-2);
+    }
+
+    .level-name {
+      color: var(--ink-dimmer);
     }
 
     p {
-      color: var(--wood-lighter);
-      font-size: 0.9rem;
+      margin-top: 0.15rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-dimmer);
     }
   }
 
@@ -278,37 +338,25 @@
   }
 
   .hud-button {
-    padding: 0.45rem 1rem;
+    padding: 0.55rem 1.15rem;
     font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--wood-darkest);
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
     cursor: pointer;
     text-decoration: none;
 
     &:disabled {
-      opacity: 0.45;
-      filter: saturate(0.6);
+      opacity: 0.35;
       cursor: not-allowed;
+
+      &:hover {
+        background: var(--glass-bg);
+        border-color: var(--glass-border);
+      }
     }
 
-    &:hover:not(:disabled) {
-      filter: brightness(1.08);
-    }
-
-    &:active {
+    &:active:not(:disabled) {
       transform: translateY(1px);
-    }
-
-    &--primary {
-      background:
-        repeating-linear-gradient(
-          90deg,
-          rgba(62, 36, 19, 0.12) 0px,
-          rgba(62, 36, 19, 0.12) 2px,
-          transparent 2px,
-          transparent 18px
-        ),
-        linear-gradient(180deg, var(--wood-highlight), var(--wood-lighter));
     }
   }
 
@@ -342,27 +390,55 @@
     z-index: 100;
     display: grid;
     place-items: center;
-    background: rgba(40, 20, 5, 0.55);
+    background: rgba(7, 10, 22, 0.62);
+    backdrop-filter: blur(7px);
+    animation: fadeIn 0.45s ease;
   }
 
   .win-panel {
-    padding: 2rem 2.5rem;
+    padding: 2.6rem 3rem;
     text-align: center;
+    animation: riseIn 0.55s cubic-bezier(0.25, 1.4, 0.4, 1) both;
 
     h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
+      margin: 0;
+      font-family: "Marcellus", serif;
+      font-size: 2.2rem;
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      background: linear-gradient(180deg, var(--gold-1), var(--gold-btn-2));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     p {
-      margin-bottom: 1.25rem;
+      margin: 0.6rem 0 1.5rem;
+      font-size: 0.95rem;
+      color: var(--ink-dim);
     }
+  }
+
+  .win-eyebrow {
+    font-family: "Marcellus", serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.35em;
+    text-indent: 0.35em;
+    text-transform: uppercase;
+    color: rgba(255, 225, 170, 0.6);
+    margin-bottom: 0.5rem;
   }
 
   .win-actions {
     display: flex;
     justify-content: center;
     gap: 0.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .win-overlay,
+    .win-panel {
+      animation: none;
+    }
   }
 </style>

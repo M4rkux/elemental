@@ -31,6 +31,8 @@ export class GameEngine {
 
 	platforms = $state<ElementSlot[][]>([]);
 	moves = $state(0);
+	/** Set when the last move revealed a mystery element; the UI clears it after animating. */
+	lastReveal = $state<{ platform: number; index: number } | null>(null);
 	private history = $state<{ from: number; to: number; count: number }[]>([]);
 
 	won = $derived(
@@ -115,18 +117,18 @@ export class GameEngine {
 		const group = this.platforms[from].slice(index);
 		if (!this.canDrop(to, group[0].element, group.length)) return false;
 
-		this.platforms[from] = this.reveal(this.platforms[from].slice(0, index));
+		// A mystery at the bottom of the source rope gets revealed.
+		const remaining = this.platforms[from].slice(0, index);
+		const last = remaining[remaining.length - 1];
+		if (last && !last.revealed) {
+			remaining[remaining.length - 1] = { element: last.element, revealed: true };
+			this.lastReveal = { platform: from, index: remaining.length - 1 };
+		}
+		this.platforms[from] = remaining;
 		this.platforms[to] = [...this.platforms[to], ...group];
 		this.moves += 1;
 		this.history = [...this.history, { from, to, count: group.length }];
 		return true;
-	}
-
-	/** A mystery at the bottom of a rope gets revealed. */
-	private reveal(slots: ElementSlot[]): ElementSlot[] {
-		const last = slots[slots.length - 1];
-		if (!last || last.revealed) return slots;
-		return [...slots.slice(0, -1), { element: last.element, revealed: true }];
 	}
 
 	get canUndo(): boolean {

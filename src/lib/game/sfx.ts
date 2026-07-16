@@ -14,7 +14,31 @@ interface GrabBuffers {
   loop: AudioBuffer;
 }
 
-const SFX_VOLUME = 0.2;
+/** Master SFX volume. Will become a user setting; every sound scales under it. */
+const SFX_VOLUME = 1;
+
+// Internal per-sound mix levels, applied on top of the master volume.
+const GRAB_VOLUME = 0.2;
+const TAP_VOLUME = 1;
+const REVEAL_VOLUME = 0.5;
+const COMPLETE_VOLUME = 0.5;
+
+// All players share one AudioContext (browsers cap how many a page can
+// have); each carves out its own gain node for its mix level.
+let sharedCtx: AudioContext | null = null;
+
+function ensureCtx(): AudioContext {
+  if (!sharedCtx) sharedCtx = new AudioContext();
+  return sharedCtx;
+}
+
+function makeGain(volume: number): GainNode {
+  const ctx = ensureCtx();
+  const gain = ctx.createGain();
+  gain.gain.value = SFX_VOLUME * volume;
+  gain.connect(ctx.destination);
+  return gain;
+}
 
 /**
  * Plays the grab sound for an element: the intro once, then the loop until
@@ -23,29 +47,24 @@ const SFX_VOLUME = 0.2;
  * starts exactly when the intro ends, without a gap.
  */
 class GrabSoundPlayer {
-  private ctx: AudioContext | null = null;
   private gain: GainNode | null = null;
   private buffers = new Map<Element, Promise<GrabBuffers | null>>();
   private playing: AudioBufferSourceNode[] = [];
   /** Invalidates a grab still waiting on its buffers when released early. */
   private generation = 0;
 
+  /** Lazily creates the shared context and this player's volume node. */
+  private ensureCtx(): AudioContext {
+    const ctx = ensureCtx();
+    if (!this.gain) this.gain = makeGain(GRAB_VOLUME);
+    return ctx;
+  }
+
   /**
    * Fetches and decodes every grab sound so the first grab plays instantly.
    * Safe to call before any user gesture: the AudioContext starts suspended
    * and is resumed on the first grab. Call once when the game screen mounts.
    */
-  /** Lazily creates the context and the master volume node. */
-  private ensureCtx(): AudioContext {
-    if (!this.ctx) {
-      this.ctx = new AudioContext();
-      this.gain = this.ctx.createGain();
-      this.gain.gain.value = SFX_VOLUME;
-      this.gain.connect(this.ctx.destination);
-    }
-    return this.ctx;
-  }
-
   preload(): void {
     this.ensureCtx();
     for (const element of Object.keys(GRAB_SOUNDS) as Element[]) {
@@ -55,10 +74,10 @@ class GrabSoundPlayer {
 
   private async load(element: Element): Promise<GrabBuffers | null> {
     const urls = GRAB_SOUNDS[element];
-    if (!urls || !this.ctx) return null;
+    if (!urls) return null;
     const cached = this.buffers.get(element);
     if (cached) return cached;
-    const ctx = this.ctx;
+    const ctx = this.ensureCtx();
     const decode = async (url: string) => {
       const response = await fetch(url);
       return ctx.decodeAudioData(await response.arrayBuffer());
@@ -117,3 +136,77 @@ class GrabSoundPlayer {
 }
 
 export const grabSound = new GrabSoundPlayer();
+
+/**
+ * A one-shot sound effect. Overlapping plays are fine: each play spawns its
+ * own source node.
+ */
+class OneShotPlayer {
+  private gain: GainNode | null = null;
+  private buffer: Promise<AudioBuffer | null> | null = null;
+
+  constructor(
+    private readonly url: string,
+    private readonly volume: number,
+  ) {}
+
+  private ensureCtx(): AudioContext {
+    const ctx = ensureCtx();
+    if (!this.gain) this.gain = makeGain(this.volume);
+    return ctx;
+  }
+
+  preload(): void {
+    this.ensureCtx();
+    void this.load();
+  }
+
+  private load(): Promise<AudioBuffer | null> {
+    if (this.buffer) return this.buffer;
+    const ctx = this.ensureCtx();
+    this.buffer = fetch(this.url)
+      .then(async (response) =>
+        ctx.decodeAudioData(await response.arrayBuffer()),
+      )
+      .catch(() => {
+        // Drop the failed attempt so a later play can retry the fetch.
+        this.buffer = null;
+        return null;
+      });
+    return this.buffer;
+  }
+
+  async play(): Promise<void> {
+    const ctx = this.ensureCtx();
+    if (ctx.state === "suspended") void ctx.resume();
+    const buffer = await this.load();
+    if (!buffer || !this.gain) return;
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.gain);
+    source.start();
+  }
+}
+
+/** Played when a group of elements lands on a platform. */
+export const tapSound = new OneShotPlayer("/sfx/tap_sound.wav", TAP_VOLUME);
+
+/** Played when a mystery element is revealed. */
+export const revealSound = new OneShotPlayer("/sfx/reveal.wav", REVEAL_VOLUME);
+
+const COMPLETE_PLAYERS: Record<Element, OneShotPlayer> = {
+  earth: new OneShotPlayer("/sfx/earth_complete.m4a", COMPLETE_VOLUME),
+  fire: new OneShotPlayer("/sfx/fire_complete.wav", COMPLETE_VOLUME),
+  water: new OneShotPlayer("/sfx/water_complete.m4a", COMPLETE_VOLUME),
+  air: new OneShotPlayer("/sfx/air_complete.wav", COMPLETE_VOLUME),
+};
+
+/** Played when a platform is completed with its element. */
+export const completeSound = {
+  preload(): void {
+    for (const player of Object.values(COMPLETE_PLAYERS)) player.preload();
+  },
+  play(element: Element): Promise<void> {
+    return COMPLETE_PLAYERS[element].play();
+  },
+};
