@@ -120,7 +120,7 @@
   // Layout constants from Platform/ElementPiece styles, used to aim the
   // placement burst at the middle of the just-dropped group.
   const BASE_REM = 1.9 + 0.35; // platform base + rope-area top padding
-  const SLOT_REM = 3.55; // piece (3.25) + gap (0.3)
+  const SLOT_REM = 4; // piece (3.25) + gap (0.75)
 
   /** Fires a short particle burst centered on the group just placed. */
   function spawnBurst(platform: number, element: Element, count: number) {
@@ -408,7 +408,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.75rem;
     pointer-events: none;
   }
 
