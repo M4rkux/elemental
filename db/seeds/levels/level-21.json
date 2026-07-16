@@ -1,0 +1,32 @@
+{
+  "number": 21,
+  "stage": 2,
+  "name": "Veiled Crossing",
+  "data": {
+    "maxPerPlatform": 4,
+    "platforms": [
+      {
+        "type": "neutral",
+        "elements": ["earth", "air", "water", "air"],
+        "hidden": [1, 2]
+      },
+      {
+        "type": "air",
+        "elements": ["air", "air", "earth", "fire"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["water", "fire", "water", "fire"],
+        "hidden": [0, 1, 2]
+      },
+      {
+        "type": "neutral",
+        "elements": ["fire"]
+      },
+      {
+        "type": "water",
+        "elements": ["water", "earth", "earth"]
+      }
+    ]
+  }
+}

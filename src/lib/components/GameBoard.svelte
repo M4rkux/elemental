@@ -207,6 +207,16 @@
       ? "valid"
       : "invalid";
   }
+
+  // At most 5 platforms fit one row; bigger boards split evenly across two
+  // (8 → 4 + 4, 7 → 4 + 3).
+  const MAX_PLATFORMS_PER_ROW = 5;
+  let platformRows = $derived.by(() => {
+    const indexes = engine.platforms.map((_, i) => i);
+    if (indexes.length <= MAX_PLATFORMS_PER_ROW) return [indexes];
+    const first = Math.ceil(indexes.length / 2);
+    return [indexes.slice(0, first), indexes.slice(first)];
+  });
 </script>
 
 <svelte:window
@@ -238,24 +248,31 @@
   </header>
 
   <div class="platforms">
-    {#each engine.platforms as slots, i (i)}
-      <Platform
-        type={engine.platformTypes[i]}
-        {slots}
-        maxPerPlatform={engine.maxPerPlatform}
-        complete={engine.isComplete(i)}
-        lockedCount={engine.lockedCount(i)}
-        cascadeOrder={cascading ? i : null}
-        pickable={(index) => !drag && !engine.won && engine.canPick(i, index)}
-        hiddenFrom={drag?.from === i ? drag.index : null}
-        maskedIndex={maskedReveal?.platform === i ? maskedReveal.index : null}
-        revealingIndex={activeReveal?.platform === i
-          ? activeReveal.index
-          : null}
-        dropState={dropStateFor(i)}
-        onGrab={(index, event) => grab(i, index, event)}
-        bind:el={platformEls[i]}
-      />
+    {#each platformRows as row, r (r)}
+      <div class="platform-row">
+        {#each row as i (i)}
+          <Platform
+            type={engine.platformTypes[i]}
+            slots={engine.platforms[i]}
+            maxPerPlatform={engine.maxPerPlatform}
+            complete={engine.isComplete(i)}
+            lockedCount={engine.lockedCount(i)}
+            cascadeOrder={cascading ? i : null}
+            pickable={(index) =>
+              !drag && !engine.won && engine.canPick(i, index)}
+            hiddenFrom={drag?.from === i ? drag.index : null}
+            maskedIndex={maskedReveal?.platform === i
+              ? maskedReveal.index
+              : null}
+            revealingIndex={activeReveal?.platform === i
+              ? activeReveal.index
+              : null}
+            dropState={dropStateFor(i)}
+            onGrab={(index, event) => grab(i, index, event)}
+            bind:el={platformEls[i]}
+          />
+        {/each}
+      </div>
     {/each}
   </div>
 
@@ -373,6 +390,13 @@
   }
 
   .platforms {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .platform-row {
     display: flex;
     justify-content: center;
     gap: clamp(0.4rem, 2vw, 1.25rem);

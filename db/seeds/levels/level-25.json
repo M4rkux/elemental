@@ -1,0 +1,33 @@
+{
+  "number": 25,
+  "stage": 2,
+  "name": "Mist and Stone",
+  "data": {
+    "maxPerPlatform": 4,
+    "platforms": [
+      {
+        "type": "neutral",
+        "elements": ["earth", "air", "air"],
+        "hidden": [0]
+      },
+      {
+        "type": "neutral",
+        "elements": ["fire", "water"],
+        "hidden": [0]
+      },
+      {
+        "type": "air",
+        "elements": ["air", "earth", "fire", "water"]
+      },
+      {
+        "type": "fire",
+        "elements": ["fire", "air", "water"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["earth", "water", "fire", "earth"],
+        "hidden": [0, 1, 2]
+      }
+    ]
+  }
+}

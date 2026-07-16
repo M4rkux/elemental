@@ -30,6 +30,7 @@
 <style lang="scss">
 	.element {
 		--piece-glow: transparent;
+		--piece-ring: transparent;
 		--piece-glow-blur: 14px;
 		position: relative;
 		width: var(--element-size, 3.25rem);
@@ -56,36 +57,41 @@
 				0 0 var(--piece-glow-blur) var(--piece-glow);
 		}
 
-		// Pieces on a completed platform are sealed with a golden ring.
+		// Sealed pieces (completed or locked in place) get a ring and a wide
+		// glow in their own element's color.
 		&.complete {
 			box-shadow:
 				inset -6px -8px 12px rgba(0, 0, 0, 0.35),
 				inset 5px 6px 10px rgba(255, 255, 255, 0.25),
 				0 6px 16px rgba(0, 0, 0, 0.45),
-				0 0 var(--piece-glow-blur) var(--piece-glow),
-				0 0 0 3px rgba(255, 215, 130, 0.85),
-				0 0 26px rgba(255, 200, 110, 0.55);
+				0 0 0 3px var(--piece-ring),
+				0 0 26px var(--piece-glow);
 		}
 
 		&.earth {
 			background: radial-gradient(circle at 35% 30%, var(--element-earth-light), var(--element-earth) 70%);
 			--piece-glow: var(--element-earth-glow);
+			--piece-ring: var(--element-earth-light);
 		}
 		&.fire {
 			background: radial-gradient(circle at 35% 30%, var(--element-fire-light), var(--element-fire) 70%);
 			--piece-glow: var(--element-fire-glow);
+			--piece-ring: var(--element-fire-light);
 		}
 		&.water {
 			background: radial-gradient(circle at 35% 30%, var(--element-water-light), var(--element-water) 70%);
 			--piece-glow: var(--element-water-glow);
+			--piece-ring: var(--element-water-light);
 		}
 		&.air {
 			background: radial-gradient(circle at 35% 30%, var(--element-air-light), var(--element-air) 75%);
 			--piece-glow: var(--element-air-glow);
+			--piece-ring: var(--element-air-light);
 		}
 		&.mystery {
 			background: radial-gradient(circle at 35% 30%, var(--element-mystery-light), var(--element-mystery) 70%);
 			--piece-glow: var(--element-mystery-glow);
+			--piece-ring: var(--element-mystery-light);
 		}
 	}
 </style>

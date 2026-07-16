@@ -1,0 +1,42 @@
+{
+	"number": 26,
+	"stage": 3,
+	"name": "Boiling Point",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": ["fire", "earth", "water"]
+			},
+			{
+				"type": "neutral",
+				"elements": ["water", "air", "fire"]
+			},
+			{
+				"type": "neutral",
+				"elements": ["earth", "fire", "air"]
+			},
+			{
+				"type": "neutral",
+				"elements": ["air", "water", "earth"]
+			},
+			{
+				"type": "neutral",
+				"elements": ["fire", "water", "fire"]
+			},
+			{
+				"type": "neutral",
+				"elements": ["water", "fire", "water"]
+			},
+			{
+				"type": "neutral",
+				"elements": ["earth", "air", "fire"]
+			},
+			{
+				"type": "neutral",
+				"elements": ["water", "fire", "water"]
+			}
+		]
+	}
+}

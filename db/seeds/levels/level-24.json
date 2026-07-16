@@ -1,0 +1,32 @@
+{
+  "number": 24,
+  "stage": 2,
+  "name": "Hidden Embers",
+  "data": {
+    "maxPerPlatform": 4,
+    "platforms": [
+      {
+        "type": "neutral",
+        "elements": ["earth", "fire", "water", "fire"],
+        "hidden": [0, 1, 2]
+      },
+      {
+        "type": "neutral",
+        "elements": ["earth", "air"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["fire", "air", "earth", "air"],
+        "hidden": [0, 2]
+      },
+      {
+        "type": "fire",
+        "elements": ["fire", "air", "earth"]
+      },
+      {
+        "type": "water",
+        "elements": ["water", "water", "water"]
+      }
+    ]
+  }
+}

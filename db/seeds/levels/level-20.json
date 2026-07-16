@@ -9,36 +9,17 @@
 				"type": "air",
 				"elements": [
 					"air",
-					"water",
-					"fire",
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
 					"fire",
 					"fire",
-					"air",
-					"air"
-				],
-				"hidden": [
-					0,
-					1,
-					2
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth",
 					"water"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"fire",
+					"earth",
+					"air",
+					"air",
 					"earth"
 				],
 				"hidden": [
@@ -46,12 +27,33 @@
 				]
 			},
 			{
-				"type": "water",
+				"type": "earth",
 				"elements": [
-					"water",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
 					"air",
 					"water",
+					"fire"
+				],
+				"hidden": [
+					0,
+					1
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
 					"earth"
+				],
+				"hidden": [
+					1
 				]
 			}
 		]

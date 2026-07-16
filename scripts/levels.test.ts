@@ -42,10 +42,14 @@ describe.each(files)('%s', (file) => {
 		}
 	});
 
-	it('has exactly 4 elements of each kind', () => {
+	it('has element counts that fill whole platforms', () => {
+		// Every present element must be completable: its count has to fill
+		// platforms exactly (a multiple of the capacity). Zero is fine — not
+		// every level uses all four elements.
 		const all = board.stacks.flat();
 		for (const element of ELEMENTS) {
-			expect(all.filter((s) => s.element === element)).toHaveLength(4);
+			const count = all.filter((s) => s.element === element).length;
+			expect(count % MAX_PER_PLATFORM).toBe(0);
 		}
 	});
 

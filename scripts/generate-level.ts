@@ -81,11 +81,14 @@ function randomPlatforms(
 	}
 
 	// Hidden elements go on neutral platforms and must be covered by at least
-	// one element below (the bottom of a rope is always revealed).
+	// one element below (the bottom of a rope is always revealed). A mystery
+	// never sits directly on its own element: the reveal would be a dud.
 	const candidates: [number, number][] = [];
 	for (let i = 0; i < PLATFORM_COUNT; i++) {
 		if (types[i] !== 'neutral') continue;
-		for (let p = 0; p < stacks[i].length - 1; p++) candidates.push([i, p]);
+		for (let p = 0; p < stacks[i].length - 1; p++) {
+			if (stacks[i][p] !== stacks[i][p + 1]) candidates.push([i, p]);
+		}
 	}
 	if (candidates.length < mysteryCount) return null;
 	const hidden: number[][] = types.map(() => []);

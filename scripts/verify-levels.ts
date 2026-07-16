@@ -36,7 +36,10 @@ for (const file of files) {
 	}
 	for (const element of ELEMENTS) {
 		const count = board.stacks.flat().filter((s) => s.element === element).length;
-		if (count !== 4) problems.push(`${element} appears ${count} times, expected 4`);
+		// Every present element must fill platforms exactly; zero is fine.
+		if (count % MAX_PER_PLATFORM !== 0) {
+			problems.push(`${element} appears ${count} times, not a multiple of ${MAX_PER_PLATFORM}`);
+		}
 	}
 	for (let i = 0; i < level.data.platforms.length; i++) {
 		const platform = level.data.platforms[i];
@@ -49,6 +52,10 @@ for (const file of files) {
 		for (const h of platform.hidden ?? []) {
 			if (!Number.isInteger(h) || h < 0 || h >= platform.elements.length - 1) {
 				problems.push(`platform ${i} hidden index ${h} is not a covered element`);
+			} else if (platform.elements[h] === platform.elements[h + 1]) {
+				problems.push(
+					`platform ${i} hidden ${platform.elements[h]} at ${h} sits directly on its own element`
+				);
 			}
 		}
 	}
