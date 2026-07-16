@@ -13,6 +13,7 @@
     hiddenFrom = null,
     maskedIndex = null,
     revealingIndex = null,
+    cascadeOrder = null,
     dropState = null,
     onGrab,
     el = $bindable(),
@@ -30,6 +31,8 @@
     maskedIndex?: number | null;
     /** Slot whose mystery element was just revealed; plays the spin-in + burst ring. */
     revealingIndex?: number | null;
+    /** While the board entrance plays, this platform's position in the stagger; null once settled. */
+    cascadeOrder?: number | null;
     dropState?: "valid" | "invalid" | null;
     onGrab: (index: number, event: PointerEvent) => void;
     el?: HTMLElement;
@@ -75,6 +78,11 @@
         class:slot--lifted={hiddenFrom !== null && i >= hiddenFrom}
         class:slot--pickable={pickable(i)}
         class:slot--revealing={revealingIndex === i}
+        class:slot--entering={cascadeOrder !== null}
+        style:--cascade-delay={cascadeOrder !== null
+          ? `${(cascadeOrder * 3 + i) * 55}ms`
+          : null}
+        style:--cascade-drop={cascadeOrder !== null ? `${i * 4 + 0.5}rem` : null}
         aria-label={slot.revealed
           ? `${slot.element} element`
           : "mystery element"}
@@ -295,6 +303,26 @@
     &--revealing {
       animation: reveal 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
+
+    // Entrance: each element fades in at the top of the rope and drops down
+    // to its slot. --cascade-drop is the distance from the rope top
+    // (slot stride: 3.25rem piece + 0.75rem gap); --cascade-delay staggers
+    // across platforms and slots. `both` keeps it hidden until its turn.
+    &--entering {
+      animation: cascade-drop 0.42s cubic-bezier(0.22, 1, 0.36, 1)
+        var(--cascade-delay, 0ms) both;
+    }
+  }
+
+  @keyframes cascade-drop {
+    from {
+      opacity: 0;
+      transform: translateY(calc(-1 * var(--cascade-drop, 0rem)));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .burst-ring {
@@ -331,7 +359,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .slot--revealing {
+    .slot--revealing,
+    .slot--entering {
       animation: none;
     }
     .burst-ring {

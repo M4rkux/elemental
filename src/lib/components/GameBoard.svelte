@@ -92,6 +92,17 @@
     };
   });
 
+  // On entry (and restart, which remounts the board) the elements cascade
+  // down their ropes. The window covers the last stagger delay + drop time;
+  // afterwards the entrance class is dropped so later re-renders stay still.
+  const CASCADE_MS = 1600;
+  let cascading = $state(true);
+
+  $effect(() => {
+    const timer = setTimeout(() => (cascading = false), CASCADE_MS);
+    return () => clearTimeout(timer);
+  });
+
   let drag = $state<Drag | null>(null);
   let dropTarget = $state<number | null>(null);
   let platformEls: (HTMLElement | undefined)[] = $state([]);
@@ -234,6 +245,7 @@
         maxPerPlatform={engine.maxPerPlatform}
         complete={engine.isComplete(i)}
         lockedCount={engine.lockedCount(i)}
+        cascadeOrder={cascading ? i : null}
         pickable={(index) => !drag && !engine.won && engine.canPick(i, index)}
         hiddenFrom={drag?.from === i ? drag.index : null}
         maskedIndex={maskedReveal?.platform === i ? maskedReveal.index : null}
