@@ -35,7 +35,31 @@
     y: number;
     offsetX: number;
     offsetY: number;
+    // Press-start point; compared against release point to tell a drag from a click.
+    startX: number;
+    startY: number;
   }
+
+  interface Selected {
+    from: number;
+    index: number;
+    group: Element[];
+  }
+
+  interface Flight {
+    from: number;
+    index: number;
+    group: Element[];
+    target: number;
+    x: number;
+    y: number;
+  }
+
+  // How long a click-placed group takes to fly from its rope to the target.
+  const FLIGHT_MS = 220;
+
+  // A pointer move past this many px counts as a drag, not a click.
+  const CLICK_THRESHOLD = 6;
 
   // Matches the platform completion animation in Platform.svelte:
   // 250ms base fill + 450ms rope fill, plus a small buffer.
@@ -104,8 +128,20 @@
   });
 
   let drag = $state<Drag | null>(null);
+  // Click-to-move: tapping a piece pops it instead of dragging it; a second
+  // tap on a platform (or the same piece, or empty space) resolves it.
+  let selected = $state<Selected | null>(null);
+  // A group animating from its rope to a clicked target; not a real drag,
+  // just a tween, so it gets its own state rather than reusing `drag`.
+  let flight = $state<Flight | null>(null);
+  let flying = $state(false);
   let dropTarget = $state<number | null>(null);
   let platformEls: (HTMLElement | undefined)[] = $state([]);
+  // Press-start point for clicks that land outside any pickable slot (empty
+  // rope, locked platform, background) — grab() never fires there, so this
+  // is the only record of where the gesture began.
+  let downX = 0;
+  let downY = 0;
 
   interface Burst {
     id: number;
@@ -121,6 +157,45 @@
   // placement burst at the middle of the just-dropped group.
   const BASE_REM = 1.9 + 0.35; // platform base + rope-area top padding
   const SLOT_REM = 4; // piece (3.25) + gap (0.75)
+  const PIECE_REM = 3.25; // ElementPiece's --element-size default
+
+  /** Screen position a slot's piece (top-left, matching the ghost's anchor) sits at. */
+  function slotTopLeft(platform: number, index: number): { x: number; y: number } {
+    const el = platformEls[platform];
+    if (!el) return { x: 0, y: 0 };
+    const rect = el.getBoundingClientRect();
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const half = (PIECE_REM / 2) * rem;
+    return {
+      x: rect.left + rect.width / 2 - half,
+      y: rect.top + (BASE_REM + (index + 0.5) * SLOT_REM) * rem - half,
+    };
+  }
+
+  /**
+   * Click-to-move has no cursor to carry the ghost, so it flies one instead:
+   * a short tween from the source slot to the landing slot, then the move
+   * actually commits. Mirrors what a real drag-drop looks like on release.
+   */
+  function flyToPlacement(from: number, index: number, group: Element[], target: number) {
+    const start = slotTopLeft(from, index);
+    flight = { from, index, group, target, x: start.x, y: start.y };
+    flying = false;
+    requestAnimationFrame(() => {
+      if (!flight) return;
+      const end = slotTopLeft(target, engine.platforms[target].length);
+      flying = true;
+      flight.x = end.x;
+      flight.y = end.y;
+    });
+    setTimeout(() => {
+      if (!flight) return;
+      const landed = flight;
+      flight = null;
+      flying = false;
+      tryPlace(landed.from, landed.index, landed.group, landed.target);
+    }, FLIGHT_MS);
+  }
 
   /** Fires a short particle burst centered on the group just placed. */
   function spawnBurst(platform: number, element: Element, count: number) {
@@ -156,15 +231,17 @@
       y: event.clientY,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
+      startX: event.clientX,
+      startY: event.clientY,
     };
     dropTarget = null;
     void grabSound.grab(drag.group[0]);
   }
 
-  function targetAt(x: number, y: number): number | null {
+  function targetAt(x: number, y: number, excludeFrom: number | null): number | null {
     for (let i = 0; i < platformEls.length; i++) {
       const el = platformEls[i];
-      if (!el || i === drag?.from) continue;
+      if (!el || i === excludeFrom) continue;
       const rect = el.getBoundingClientRect();
       if (
         x >= rect.left &&
@@ -178,34 +255,91 @@
     return null;
   }
 
-  function onPointerMove(event: PointerEvent) {
-    if (!drag) return;
-    drag.x = event.clientX;
-    drag.y = event.clientY;
-    dropTarget = targetAt(event.clientX, event.clientY);
+  // Pointermove can fire well above 60Hz (high-poll-rate mice, touch); a
+  // $state write per event forces a reactive update the display can't even
+  // show. Coalesce to one write per animation frame instead.
+  let rafPending = false;
+  let pendingX = 0;
+  let pendingY = 0;
+
+  function onGlobalPointerDown(event: PointerEvent) {
+    downX = event.clientX;
+    downY = event.clientY;
   }
 
-  function onPointerUp() {
-    if (!drag) return;
-    grabSound.release();
-    if (dropTarget !== null && engine.move(drag.from, drag.index, dropTarget)) {
-      spawnBurst(dropTarget, drag.group[0], drag.group.length);
-      void tapSound.play();
-      // Complete platforms reject drops, so completeness here means the
-      // move just sealed the platform.
-      if (engine.isComplete(dropTarget)) {
-        void completeSound.play(drag.group[0]);
+  function onPointerMove(event: PointerEvent) {
+    // Hover-highlight runs during a real drag AND while a click-selected
+    // piece is waiting to be placed — same targeting, no cursor to follow.
+    if (!drag && !selected) return;
+    pendingX = event.clientX;
+    pendingY = event.clientY;
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+      rafPending = false;
+      if (drag) {
+        drag.x = pendingX;
+        drag.y = pendingY;
+        dropTarget = targetAt(pendingX, pendingY, drag.from);
+      } else if (selected) {
+        dropTarget = targetAt(pendingX, pendingY, selected.from);
       }
+    });
+  }
+
+  /** Places `group` on `target` if valid, with the shared drop feedback (burst/sound). */
+  function tryPlace(from: number, index: number, group: Element[], target: number | null) {
+    if (target === null || !engine.move(from, index, target)) return;
+    spawnBurst(target, group[0], group.length);
+    void tapSound.play();
+    // Complete platforms reject drops, so completeness here means the
+    // move just sealed the platform.
+    if (engine.isComplete(target)) {
+      void completeSound.play(group[0]);
     }
-    drag = null;
+  }
+
+  function onPointerUp(event: PointerEvent) {
+    if (drag) {
+      const moved =
+        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > CLICK_THRESHOLD;
+      if (moved) {
+        // Real drag-drop: the ghost is already sitting at the drop point.
+        grabSound.release();
+        tryPlace(drag.from, drag.index, drag.group, dropTarget);
+        selected = null;
+      } else if (selected?.from === drag.from && selected?.index === drag.index) {
+        // Clicking the already-selected piece again lowers it back.
+        grabSound.release();
+        selected = null;
+      } else {
+        // Pop it: parked in place until the next click resolves it. Keep
+        // the grab sound looping, same as it does through a held drag.
+        selected = { from: drag.from, index: drag.index, group: drag.group };
+      }
+      drag = null;
+      dropTarget = null;
+      return;
+    }
+
+    // No slot was pressed (empty rope, locked platform, background) — the
+    // only thing a plain click can do here is resolve a pending selection.
+    if (!selected) return;
+    const moved = Math.hypot(event.clientX - downX, event.clientY - downY) > CLICK_THRESHOLD;
+    if (moved) return; // swipe/scroll gesture, not a tap — leave the selection popped
+    grabSound.release();
+    const target = targetAt(event.clientX, event.clientY, selected.from);
+    if (target !== null && engine.canDrop(target, selected.group[0], selected.group.length)) {
+      flyToPlacement(selected.from, selected.index, selected.group, target);
+    }
+    selected = null;
     dropTarget = null;
   }
 
   function dropStateFor(platform: number): "valid" | "invalid" | null {
-    if (!drag || dropTarget !== platform) return null;
-    return engine.canDrop(platform, drag.group[0], drag.group.length)
-      ? "valid"
-      : "invalid";
+    const group = drag?.group ?? selected?.group;
+    if (!group || dropTarget !== platform) return null;
+    return engine.canDrop(platform, group[0], group.length) ? "valid" : "invalid";
   }
 
   // At most 5 platforms fit one row; bigger boards split evenly across two
@@ -220,12 +354,17 @@
 </script>
 
 <svelte:window
+  onpointerdown={onGlobalPointerDown}
   onpointermove={onPointerMove}
   onpointerup={onPointerUp}
   onpointercancel={onPointerUp}
 />
 
-<div class="board" class:board--dragging={drag !== null}>
+<div
+  class="board"
+  class:board--dragging={drag !== null}
+  class:board--selecting={selected !== null}
+>
   <header class="hud">
     <div class="hud-title">
       <h1>
@@ -260,7 +399,12 @@
             cascadeOrder={cascading ? i : null}
             pickable={(index) =>
               !drag && !engine.won && engine.canPick(i, index)}
-            hiddenFrom={drag?.from === i ? drag.index : null}
+            hiddenFrom={drag?.from === i
+              ? drag.index
+              : flight?.from === i
+                ? flight.index
+                : null}
+            poppedFrom={selected?.from === i ? selected.index : null}
             maskedIndex={maskedReveal?.platform === i
               ? maskedReveal.index
               : null}
@@ -279,10 +423,19 @@
   {#if drag}
     <div
       class="ghost"
-      style:left="{drag.x - drag.offsetX}px"
-      style:top="{drag.y - drag.offsetY}px"
+      style:transform="translate3d({drag.x - drag.offsetX}px, {drag.y - drag.offsetY}px, 0)"
     >
       {#each drag.group as element, i (i)}
+        <ElementPiece {element} grabbed />
+      {/each}
+    </div>
+  {:else if flight}
+    <div
+      class="ghost"
+      style:transform="translate3d({flight.x}px, {flight.y}px, 0)"
+      style:transition={flying ? `transform ${FLIGHT_MS}ms cubic-bezier(0.3, 0, 0.2, 1)` : "none"}
+    >
+      {#each flight.group as element, i (i)}
         <ElementPiece {element} grabbed />
       {/each}
     </div>
@@ -327,6 +480,10 @@
 
     &--dragging {
       cursor: grabbing;
+    }
+
+    &--selecting {
+      cursor: pointer;
     }
   }
 
@@ -394,6 +551,11 @@
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
+    // Drag highlight (platform--valid/invalid) repaints one platform per
+    // pointer move; contain stops that repaint/layout work from spreading
+    // to siblings. Safe here (unlike on .board) since .ghost is a sibling,
+    // not a descendant, so its position:fixed stays viewport-relative.
+    contain: layout style paint;
   }
 
   .platform-row {
@@ -404,12 +566,16 @@
 
   .ghost {
     position: fixed;
+    top: 0;
+    left: 0;
     z-index: 50;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
     pointer-events: none;
+    // transform instead of top/left: moves compositor-only, skips layout.
+    will-change: transform;
   }
 
   .burst-anchor {

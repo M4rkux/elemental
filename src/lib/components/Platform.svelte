@@ -11,6 +11,7 @@
     lockedCount = 0,
     pickable,
     hiddenFrom = null,
+    poppedFrom = null,
     maskedIndex = null,
     revealingIndex = null,
     cascadeOrder = null,
@@ -27,6 +28,8 @@
     pickable: (index: number) => boolean;
     /** While a drag is in progress, elements from this index down are lifted off the rope. */
     hiddenFrom?: number | null;
+    /** Click-to-move: elements from this index down are popped in place, awaiting a placement tap. */
+    poppedFrom?: number | null;
     /** Slot already revealed in the engine but still showing its mystery face (pre-reveal beat). */
     maskedIndex?: number | null;
     /** Slot whose mystery element was just revealed; plays the spin-in + burst ring. */
@@ -76,6 +79,7 @@
         type="button"
         class="slot"
         class:slot--lifted={hiddenFrom !== null && i >= hiddenFrom}
+        class:slot--popped={poppedFrom !== null && i >= poppedFrom}
         class:slot--pickable={pickable(i)}
         class:slot--revealing={revealingIndex === i}
         class:slot--entering={cascadeOrder !== null}
@@ -93,6 +97,7 @@
             ? slot.element
             : "mystery"}
           complete={complete || i < lockedCount}
+          grabbed={poppedFrom !== null && i >= poppedFrom}
         />
         {#if revealingIndex === i}
           <span class="burst-ring"></span>
@@ -291,6 +296,7 @@
     display: flex;
     touch-action: none;
     cursor: default;
+    transition: transform 180ms cubic-bezier(0.25, 1.4, 0.4, 1);
 
     &--pickable {
       cursor: grab;
@@ -298,6 +304,12 @@
 
     &--lifted {
       visibility: hidden;
+    }
+
+    // Click-to-move: popped in place, waiting for a placement tap.
+    &--popped {
+      transform: translateY(-0.6rem);
+      z-index: 2;
     }
 
     &--revealing {
@@ -362,6 +374,9 @@
     .slot--revealing,
     .slot--entering {
       animation: none;
+    }
+    .slot {
+      transition: none;
     }
     .burst-ring {
       display: none;
