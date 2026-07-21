@@ -72,6 +72,15 @@ describe.each(files)('%s', (file) => {
 		}
 	});
 
+	it('keeps stone-secret platforms neutral, non-empty, and free of ordinary hidden elements', () => {
+		for (const platform of level.data.platforms) {
+			if (!platform.stoneSecret) continue;
+			expect(platform.type).toBe('neutral');
+			expect(platform.hidden ?? []).toHaveLength(0);
+			expect(platform.elements.length).toBeGreaterThan(0);
+		}
+	});
+
 	it('does not start won or with a completed platform', () => {
 		expect(isWon(board.stacks, board.types, restricted)).toBe(false);
 		for (let i = 0; i < board.stacks.length; i++) {

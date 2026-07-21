@@ -20,6 +20,11 @@ import type { Element, ElementSlot, LevelData, PlatformType } from './types';
  *   an element that has a restricted platform can only be completed there —
  *   never on a neutral platform. Complete platforms are locked.
  * - The level is won when every platform is empty or complete.
+ * - A stone-secret platform starts entirely hidden — even its bottom, unlike
+ *   an ordinary mystery — and can't be picked from or dropped onto. It breaks
+ *   the instant any *other* platform completes with the element on its stone,
+ *   revealing everything on it at once. Like other reveals, breaking is
+ *   permanent: undo doesn't re-seal it.
  */
 export class GameEngine {
 	readonly levelNumber: number;
@@ -28,11 +33,15 @@ export class GameEngine {
 	readonly platformTypes: readonly PlatformType[];
 	/** Elements that have their own restricted platform. */
 	readonly restrictedElements: ReadonlySet<Element>;
+	/** Per platform, the element that must be completed elsewhere to break its stone seal. */
+	readonly stoneSecret: readonly (Element | null)[];
 
 	platforms = $state<ElementSlot[][]>([]);
 	moves = $state(0);
 	/** Set when the last move revealed a mystery element; the UI clears it after animating. */
 	lastReveal = $state<{ platform: number; index: number } | null>(null);
+	/** Set when the last move broke a stone seal; the UI clears it after animating. */
+	lastStoneBreak = $state<number | null>(null);
 	private history = $state<{ from: number; to: number; count: number }[]>([]);
 
 	won = $derived(
@@ -48,13 +57,20 @@ export class GameEngine {
 		this.restrictedElements = new Set(
 			this.platformTypes.filter((t): t is Element => t !== 'neutral')
 		);
+		this.stoneSecret = level.data.platforms.map((p) => p.stoneSecret ?? null);
 		this.platforms = level.data.platforms.map((p) =>
 			p.elements.map((element, i) => ({
 				element,
-				// The bottom of a rope is always revealed, whatever the data says.
-				revealed: !p.hidden?.includes(i) || i === p.elements.length - 1
+				// Stone-sealed ropes start fully hidden, bottom included; otherwise
+				// the bottom of a rope is always revealed, whatever the data says.
+				revealed: p.stoneSecret ? false : !p.hidden?.includes(i) || i === p.elements.length - 1
 			}))
 		);
+	}
+
+	/** True while a stone-secret platform's seal hasn't broken yet. */
+	isSealed(platform: number): boolean {
+		return this.stoneSecret[platform] !== null && this.platforms[platform].some((s) => !s.revealed);
 	}
 
 	isComplete(platform: number): boolean {
@@ -86,6 +102,7 @@ export class GameEngine {
 	canPick(platform: number, index: number): boolean {
 		const slots = this.platforms[platform];
 		if (index < 0 || index >= slots.length) return false;
+		if (this.isSealed(platform)) return false;
 		if (this.isComplete(platform)) return false;
 		if (index < this.lockedCount(platform)) return false;
 		const element = slots[index].element;
@@ -101,6 +118,9 @@ export class GameEngine {
 
 	canDrop(platform: number, element: Element, count: number): boolean {
 		const slots = this.platforms[platform];
+		// Sealed even when empty or bottom-matching: a covered rope can't be
+		// used as a shortcut to dodge the trigger requirement.
+		if (this.isSealed(platform)) return false;
 		if (slots.length + count > this.maxPerPlatform) return false;
 		if (this.isComplete(platform)) return false;
 		if (slots.length === 0) {
@@ -128,7 +148,22 @@ export class GameEngine {
 		this.platforms[to] = [...this.platforms[to], ...group];
 		this.moves += 1;
 		this.history = [...this.history, { from, to, count: group.length }];
+		this.breakStones();
 		return true;
+	}
+
+	/** Breaks any stone seal whose required element just got completed on another platform. */
+	private breakStones(): void {
+		for (let i = 0; i < this.platforms.length; i++) {
+			const need = this.stoneSecret[i];
+			if (!need || !this.isSealed(i)) continue;
+			const satisfied = this.platforms.some(
+				(_, j) => j !== i && this.isComplete(j) && this.platforms[j][0].element === need
+			);
+			if (!satisfied) continue;
+			this.platforms[i] = this.platforms[i].map((s) => ({ ...s, revealed: true }));
+			this.lastStoneBreak = i;
+		}
 	}
 
 	get canUndo(): boolean {

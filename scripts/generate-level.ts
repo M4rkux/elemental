@@ -2,11 +2,15 @@
  * Generates a random, guaranteed-solvable level seed JSON and writes it to
  * db/seeds/levels/level-<number>.json. Run with:
  *
- *   bun scripts/generate-level.ts <number> <name> [seed] [restrictedCount] [stage] [mysteryCount]
+ *   bun scripts/generate-level.ts <number> <name> [seed] [restrictedCount] [stage] [mysteryCount] [stoneSecretCount] [platformCount]
  *
  * `stage` defaults to ceil(number / 10): stage 1 holds levels 1–10, and so on.
  * `mysteryCount` elements start hidden; they are placed on neutral platforms,
- * always covered by at least one element below.
+ * always covered by at least one element below. `stoneSecretCount` platforms
+ * are sealed whole under a stone instead, badged with an element that must be
+ * completed on another platform to break them. The element pool is always
+ * exactly 4 of each of the 4 elements (16 pieces), however many platforms
+ * it's scattered across.
  */
 import {
 	ELEMENTS,
@@ -24,7 +28,7 @@ import {
 	solve
 } from './solver';
 
-const PLATFORM_COUNT = 5;
+const DEFAULT_PLATFORM_COUNT = 5;
 const MIN_SOLUTION_MOVES = 6;
 
 function mulberry32(seed: number): () => number {
@@ -50,10 +54,12 @@ function shuffle<T>(items: T[], rand: () => number): T[] {
 function randomPlatforms(
 	rand: () => number,
 	restrictedCount: number,
-	mysteryCount: number
+	mysteryCount: number,
+	stoneSecretCount: number,
+	platformCount: number
 ): PlatformData[] | null {
 	// `restrictedCount` platforms are locked to distinct random elements, the rest are neutral.
-	const types: PlatformType[] = Array(PLATFORM_COUNT).fill('neutral');
+	const types: PlatformType[] = Array(platformCount).fill('neutral');
 	const platformOrder = shuffle([...types.keys()], rand);
 	const elementOrder = shuffle([...ELEMENTS], rand);
 	for (let i = 0; i < restrictedCount; i++) {
@@ -64,7 +70,7 @@ function randomPlatforms(
 	// the rule that their first element must be their own.
 	const pool: Element[] = ELEMENTS.flatMap((e) => [e, e, e, e]);
 	const stacks: Element[][] = types.map(() => []);
-	for (let i = 0; i < PLATFORM_COUNT; i++) {
+	for (let i = 0; i < platformCount; i++) {
 		const type = types[i];
 		if (type === 'neutral') continue;
 		pool.splice(pool.indexOf(type), 1);
@@ -73,9 +79,9 @@ function randomPlatforms(
 
 	// Scatter the rest anywhere with room.
 	for (const element of shuffle(pool, rand)) {
-		let i = Math.floor(rand() * PLATFORM_COUNT);
+		let i = Math.floor(rand() * platformCount);
 		while (stacks[i].length >= MAX_PER_PLATFORM) {
-			i = (i + 1) % PLATFORM_COUNT;
+			i = (i + 1) % platformCount;
 		}
 		stacks[i].push(element);
 	}
@@ -84,7 +90,7 @@ function randomPlatforms(
 	// one element below (the bottom of a rope is always revealed). A mystery
 	// never sits directly on its own element: the reveal would be a dud.
 	const candidates: [number, number][] = [];
-	for (let i = 0; i < PLATFORM_COUNT; i++) {
+	for (let i = 0; i < platformCount; i++) {
 		if (types[i] !== 'neutral') continue;
 		for (let p = 0; p < stacks[i].length - 1; p++) {
 			if (stacks[i][p] !== stacks[i][p + 1]) candidates.push([i, p]);
@@ -96,28 +102,55 @@ function randomPlatforms(
 		hidden[i].push(p);
 	}
 
+	// Stone-secret: whole platforms sealed under a rock, badge showing an
+	// element that must be completed elsewhere to break it. Picked from
+	// neutral platforms with no mystery of their own — the two don't mix.
+	// Whether it's actually completable elsewhere is left to solve() below;
+	// an infeasible pick just fails that check and the caller retries.
+	const stoneCandidates = types
+		.map((_, i) => i)
+		.filter((i) => types[i] === 'neutral' && hidden[i].length === 0 && stacks[i].length > 0);
+	if (stoneCandidates.length < stoneSecretCount) return null;
+	const stoneSecret: (Element | null)[] = types.map(() => null);
+	for (const i of shuffle(stoneCandidates, rand).slice(0, stoneSecretCount)) {
+		stoneSecret[i] = elementOrder[Math.floor(rand() * elementOrder.length)];
+	}
+
 	return types.map((type, i) => ({
 		type,
 		elements: stacks[i],
-		...(hidden[i].length > 0 ? { hidden: hidden[i].sort((a, b) => a - b) } : {})
+		...(hidden[i].length > 0 ? { hidden: hidden[i].sort((a, b) => a - b) } : {}),
+		...(stoneSecret[i] ? { stoneSecret: stoneSecret[i] as Element } : {})
 	}));
 }
 
 function generate(
 	seed: number,
 	restrictedCount: number,
-	mysteryCount: number
+	mysteryCount: number,
+	stoneSecretCount: number,
+	platformCount: number
 ): { platforms: PlatformData[]; seed: number; solutionMoves: number } {
 	for (let attempt = 0; attempt < 10000; attempt++) {
 		// Attempts get their own stream per seed so nearby seeds don't converge
 		// on the same board.
 		const rand = mulberry32(seed * 10000 + attempt);
-		const platforms = randomPlatforms(rand, restrictedCount, mysteryCount);
+		const platforms = randomPlatforms(
+			rand,
+			restrictedCount,
+			mysteryCount,
+			stoneSecretCount,
+			platformCount
+		);
 		if (!platforms) continue;
 		const board: Board = {
 			types: platforms.map((p) => p.type),
+			stoneSecret: platforms.map((p) => p.stoneSecret ?? null),
 			stacks: platforms.map((p) =>
-				p.elements.map((element, i) => ({ element, revealed: !p.hidden?.includes(i) }))
+				p.elements.map((element, i) => ({
+					element,
+					revealed: p.stoneSecret ? false : !p.hidden?.includes(i)
+				}))
 			)
 		};
 		const restricted = restrictedElements(board.types);
@@ -143,8 +176,18 @@ if (restrictedCount < 0 || restrictedCount > ELEMENTS.length) {
 const stage = process.argv[6] ? Number(process.argv[6]) : Math.ceil(number / 10);
 const mysteryCount = process.argv[7] ? Number(process.argv[7]) : 0;
 if (mysteryCount < 0) throw new Error('mysteryCount must be >= 0');
+const stoneSecretCount = process.argv[8] ? Number(process.argv[8]) : 0;
+if (stoneSecretCount < 0) throw new Error('stoneSecretCount must be >= 0');
+const platformCount = process.argv[9] ? Number(process.argv[9]) : DEFAULT_PLATFORM_COUNT;
+if (platformCount < 1) throw new Error('platformCount must be >= 1');
 
-const { platforms, seed: usedSeed, solutionMoves } = generate(seed, restrictedCount, mysteryCount);
+const { platforms, seed: usedSeed, solutionMoves } = generate(
+	seed,
+	restrictedCount,
+	mysteryCount,
+	stoneSecretCount,
+	platformCount
+);
 
 const level: LevelData = {
 	number,

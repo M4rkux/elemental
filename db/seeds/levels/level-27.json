@@ -1,54 +1,54 @@
 {
-	"number": 26,
+	"number": 27,
 	"stage": 3,
-	"name": "Boiling Point",
+	"name": "Buried Vein",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "neutral",
+				"type": "water",
 				"elements": [
+					"water",
+					"earth",
+					"earth",
 					"air"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"air",
-					"water"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
 					"fire",
-					"water"
-				]
-			},
-			{
-				"type": "air",
-				"elements": [
 					"air",
-					"water",
 					"fire"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"earth",
-					"air",
-					"water",
-					"earth"
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
 				],
 				"stoneSecret": "fire"
 			},
 			{
 				"type": "neutral",
 				"elements": [
+					"water",
+					"fire",
 					"earth",
-					"fire",
-					"fire",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
 					"earth"
 				]
 			}

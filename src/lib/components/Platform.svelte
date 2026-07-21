@@ -1,7 +1,7 @@
 <script lang="ts">
   import ElementIcon from "./ElementIcon.svelte";
   import ElementPiece from "./ElementPiece.svelte";
-  import type { ElementSlot, PlatformType } from "$lib/game/types";
+  import type { Element, ElementSlot, PlatformType } from "$lib/game/types";
 
   let {
     type,
@@ -16,6 +16,9 @@
     revealingIndex = null,
     cascadeOrder = null,
     dropState = null,
+    stoneElement = null,
+    sealed = false,
+    stoneBreaking = false,
     onGrab,
     el = $bindable(),
   }: {
@@ -37,6 +40,12 @@
     /** While the board entrance plays, this platform's position in the stagger; null once settled. */
     cascadeOrder?: number | null;
     dropState?: "valid" | "invalid" | null;
+    /** Element that must be completed elsewhere to break this platform's stone seal, if any. */
+    stoneElement?: Element | null;
+    /** Whole rope is still covered by a stone; can't be picked from or dropped onto. */
+    sealed?: boolean;
+    /** Plays the one-shot shatter animation as the stone seal just broke. */
+    stoneBreaking?: boolean;
     onGrab: (index: number, event: PointerEvent) => void;
     el?: HTMLElement;
   } = $props();
@@ -104,6 +113,18 @@
         {/if}
       </button>
     {/each}
+
+    {#if sealed || stoneBreaking}
+      <div
+        class="stone-seal"
+        class:stone-seal--breaking={stoneBreaking}
+        title="Breaks when {stoneElement} is completed elsewhere"
+      >
+        <span class="stone-badge">
+          <ElementIcon element={stoneElement ?? "mystery"} />
+        </span>
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -337,6 +358,62 @@
     }
   }
 
+  // A whole rope sealed under a single rock, badged with the element that
+  // breaks it. Covers the individual (mystery) slots underneath so the
+  // column reads as one thing, not a stack of little mysteries.
+  .stone-seal {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #4a4038, #2b241f 60%, #1c1713);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      inset 0 4px 10px rgba(0, 0, 0, 0.55),
+      inset 0 -3px 6px rgba(255, 255, 255, 0.06),
+      0 6px 14px rgba(0, 0, 0, 0.4);
+
+    &--breaking {
+      animation: shatter 0.7s cubic-bezier(0.5, 0, 0.6, 1) both;
+      pointer-events: none;
+    }
+  }
+
+  .stone-badge {
+    width: 2.1rem;
+    height: 2.1rem;
+    --icon-size: 78%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.25));
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.5),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
+      inset 0 2px 3px rgba(255, 255, 255, 0.2);
+  }
+
+  @keyframes shatter {
+    0% {
+      transform: scale(1) rotate(0);
+      opacity: 1;
+      filter: brightness(1);
+    }
+    30% {
+      transform: scale(1.06) rotate(-2deg);
+      filter: brightness(2.2);
+    }
+    100% {
+      transform: scale(1.4) rotate(6deg);
+      opacity: 0;
+      filter: brightness(1);
+    }
+  }
+
   .burst-ring {
     position: absolute;
     inset: -5px;
@@ -377,6 +454,10 @@
     }
     .slot {
       transition: none;
+    }
+    .stone-seal--breaking {
+      animation: none;
+      opacity: 0;
     }
     .burst-ring {
       display: none;

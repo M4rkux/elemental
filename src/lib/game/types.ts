@@ -25,6 +25,14 @@ export interface PlatformData {
 	 * since the bottom of a rope is always revealed.
 	 */
 	hidden?: number[];
+	/**
+	 * Seals the whole rope under a stone showing this element's icon: every
+	 * element on it starts hidden — including the bottom, unlike `hidden` — and
+	 * the platform can't be picked from or dropped onto. It breaks the moment
+	 * any *other* platform completes with this element, revealing everything
+	 * on it at once. Mutually exclusive with `hidden`.
+	 */
+	stoneSecret?: Element;
 }
 
 /** The playable board of a level; stored as the `data` jsonb column. */

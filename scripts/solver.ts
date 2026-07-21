@@ -16,19 +16,45 @@ export type Stack = ElementSlot[];
 export interface Board {
 	types: PlatformType[];
 	stacks: Stack[];
+	/** Per platform, the element that must be completed elsewhere to break its stone seal. */
+	stoneSecret: (Element | null)[];
 }
 
 export function boardFromLevel(data: LevelGameData): Board {
 	return {
 		types: data.platforms.map((p) => p.type),
+		stoneSecret: data.platforms.map((p) => p.stoneSecret ?? null),
 		stacks: data.platforms.map((p) =>
 			p.elements.map((element, i) => ({
 				element,
-				// The bottom of a rope is always revealed, whatever the data says.
-				revealed: !p.hidden?.includes(i) || i === p.elements.length - 1
+				// Stone-sealed ropes start fully hidden, bottom included; otherwise
+				// the bottom of a rope is always revealed, whatever the data says.
+				revealed: p.stoneSecret ? false : !p.hidden?.includes(i) || i === p.elements.length - 1
 			}))
 		)
 	};
+}
+
+function isSealed(stack: Stack, need: Element | null): boolean {
+	return need !== null && stack.some((s) => !s.revealed);
+}
+
+/** Breaks any stone seal whose required element just got completed on another platform. */
+function breakStones(
+	stacks: Stack[],
+	types: PlatformType[],
+	stoneSecret: (Element | null)[],
+	restricted: Set<Element>
+): Stack[] {
+	return stacks.map((stack, i) => {
+		const need = stoneSecret[i];
+		if (!isSealed(stack, need)) return stack;
+		const satisfied = stacks.some(
+			(s, j) => j !== i && isComplete(s, types[j], restricted) && s[0].element === need
+		);
+		if (!satisfied) return stack;
+		return stack.map((s) => ({ ...s, revealed: true }));
+	});
 }
 
 export function restrictedElements(types: PlatformType[]): Set<Element> {
@@ -76,12 +102,15 @@ function reveal(stack: Stack): Stack {
 export function legalMoves(
 	stacks: Stack[],
 	types: PlatformType[],
-	restricted: Set<Element>
+	restricted: Set<Element>,
+	stoneSecret: (Element | null)[]
 ): [number, number, number][] {
 	const moves: [number, number, number][] = [];
 	for (let from = 0; from < stacks.length; from++) {
 		const stack = stacks[from];
 		if (stack.length === 0 || isComplete(stack, types[from], restricted)) continue;
+		// A sealed stone (or, in principle, any stack with a hidden bottom) can't be picked from.
+		if (!stack[stack.length - 1].revealed) continue;
 		const bottom = stack[stack.length - 1].element;
 		// Pickable groups are suffixes of the bottom revealed single-element run,
 		// above any locked run at the top.
@@ -94,6 +123,7 @@ export function legalMoves(
 			const count = stack.length - index;
 			for (let to = 0; to < stacks.length; to++) {
 				if (to === from) continue;
+				if (isSealed(stacks[to], stoneSecret[to])) continue;
 				const target = stacks[to];
 				if (target.length + count > MAX_PER_PLATFORM) continue;
 				if (isComplete(target, types[to], restricted)) continue;
@@ -123,11 +153,12 @@ export function solve(board: Board): number {
 		if (visited.has(key)) return -1;
 		visited.add(key);
 
-		for (const [from, index, to] of legalMoves(stacks, board.types, restricted)) {
-			const next = stacks.map((s) => [...s]);
+		for (const [from, index, to] of legalMoves(stacks, board.types, restricted, board.stoneSecret)) {
+			let next = stacks.map((s) => [...s]);
 			const group = next[from].splice(index);
 			next[from] = reveal(next[from]);
 			next[to].push(...group);
+			next = breakStones(next, board.types, board.stoneSecret, restricted);
 			const result = dfs(next, depth + 1);
 			if (result !== -1) return result;
 		}

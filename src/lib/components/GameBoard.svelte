@@ -116,6 +116,28 @@
     };
   });
 
+  // A stone seal breaks all at once (unlike a single mystery reveal): the
+  // rock shatters — matches the .stone-seal--breaking keyframes in
+  // Platform.svelte — and the real elements underneath are already there to
+  // see once it clears.
+  const STONE_BREAK_MS = 700;
+  let breakingStone = $state<number | null>(null);
+
+  $effect(() => {
+    const platform = engine.lastStoneBreak;
+    if (platform === null) return;
+    breakingStone = platform;
+    void revealSound.play();
+    const timer = setTimeout(() => {
+      breakingStone = null;
+      engine.lastStoneBreak = null;
+    }, STONE_BREAK_MS);
+    return () => {
+      clearTimeout(timer);
+      breakingStone = null;
+    };
+  });
+
   // On entry (and restart, which remounts the board) the elements cascade
   // down their ropes. The window covers the last stagger delay + drop time;
   // afterwards the entrance class is dropped so later re-renders stay still.
@@ -160,7 +182,10 @@
   const PIECE_REM = 3.25; // ElementPiece's --element-size default
 
   /** Screen position a slot's piece (top-left, matching the ghost's anchor) sits at. */
-  function slotTopLeft(platform: number, index: number): { x: number; y: number } {
+  function slotTopLeft(
+    platform: number,
+    index: number,
+  ): { x: number; y: number } {
     const el = platformEls[platform];
     if (!el) return { x: 0, y: 0 };
     const rect = el.getBoundingClientRect();
@@ -177,7 +202,12 @@
    * a short tween from the source slot to the landing slot, then the move
    * actually commits. Mirrors what a real drag-drop looks like on release.
    */
-  function flyToPlacement(from: number, index: number, group: Element[], target: number) {
+  function flyToPlacement(
+    from: number,
+    index: number,
+    group: Element[],
+    target: number,
+  ) {
     const start = slotTopLeft(from, index);
     flight = { from, index, group, target, x: start.x, y: start.y };
     flying = false;
@@ -222,6 +252,18 @@
   function grab(platform: number, index: number, event: PointerEvent) {
     if (engine.won || drag || !engine.canPick(platform, index)) return;
     event.preventDefault();
+    // Already holding a piece elsewhere: if this platform is a valid landing
+    // spot, clicking one of its pieces places the floating group there
+    // instead of swapping the selection to whatever was just clicked. No
+    // drag starts; the click falls through to onPointerUp's plain-click path,
+    // which resolves the target from these same coordinates.
+    if (
+      selected &&
+      selected.from !== platform &&
+      engine.canDrop(platform, selected.group[0], selected.group.length)
+    ) {
+      return;
+    }
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     drag = {
       from: platform,
@@ -238,7 +280,11 @@
     void grabSound.grab(drag.group[0]);
   }
 
-  function targetAt(x: number, y: number, excludeFrom: number | null): number | null {
+  function targetAt(
+    x: number,
+    y: number,
+    excludeFrom: number | null,
+  ): number | null {
     for (let i = 0; i < platformEls.length; i++) {
       const el = platformEls[i];
       if (!el || i === excludeFrom) continue;
@@ -288,7 +334,12 @@
   }
 
   /** Places `group` on `target` if valid, with the shared drop feedback (burst/sound). */
-  function tryPlace(from: number, index: number, group: Element[], target: number | null) {
+  function tryPlace(
+    from: number,
+    index: number,
+    group: Element[],
+    target: number | null,
+  ) {
     if (target === null || !engine.move(from, index, target)) return;
     spawnBurst(target, group[0], group.length);
     void tapSound.play();
@@ -302,13 +353,17 @@
   function onPointerUp(event: PointerEvent) {
     if (drag) {
       const moved =
-        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > CLICK_THRESHOLD;
+        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >
+        CLICK_THRESHOLD;
       if (moved) {
         // Real drag-drop: the ghost is already sitting at the drop point.
         grabSound.release();
         tryPlace(drag.from, drag.index, drag.group, dropTarget);
         selected = null;
-      } else if (selected?.from === drag.from && selected?.index === drag.index) {
+      } else if (
+        selected?.from === drag.from &&
+        selected?.index === drag.index
+      ) {
         // Clicking the already-selected piece again lowers it back.
         grabSound.release();
         selected = null;
@@ -325,11 +380,16 @@
     // No slot was pressed (empty rope, locked platform, background) — the
     // only thing a plain click can do here is resolve a pending selection.
     if (!selected) return;
-    const moved = Math.hypot(event.clientX - downX, event.clientY - downY) > CLICK_THRESHOLD;
+    const moved =
+      Math.hypot(event.clientX - downX, event.clientY - downY) >
+      CLICK_THRESHOLD;
     if (moved) return; // swipe/scroll gesture, not a tap — leave the selection popped
     grabSound.release();
     const target = targetAt(event.clientX, event.clientY, selected.from);
-    if (target !== null && engine.canDrop(target, selected.group[0], selected.group.length)) {
+    if (
+      target !== null &&
+      engine.canDrop(target, selected.group[0], selected.group.length)
+    ) {
       flyToPlacement(selected.from, selected.index, selected.group, target);
     }
     selected = null;
@@ -339,7 +399,9 @@
   function dropStateFor(platform: number): "valid" | "invalid" | null {
     const group = drag?.group ?? selected?.group;
     if (!group || dropTarget !== platform) return null;
-    return engine.canDrop(platform, group[0], group.length) ? "valid" : "invalid";
+    return engine.canDrop(platform, group[0], group.length)
+      ? "valid"
+      : "invalid";
   }
 
   // At most 5 platforms fit one row; bigger boards split evenly across two
@@ -412,6 +474,9 @@
               ? activeReveal.index
               : null}
             dropState={dropStateFor(i)}
+            stoneElement={engine.stoneSecret[i]}
+            sealed={engine.isSealed(i)}
+            stoneBreaking={breakingStone === i}
             onGrab={(index, event) => grab(i, index, event)}
             bind:el={platformEls[i]}
           />
@@ -423,7 +488,8 @@
   {#if drag}
     <div
       class="ghost"
-      style:transform="translate3d({drag.x - drag.offsetX}px, {drag.y - drag.offsetY}px, 0)"
+      style:transform="translate3d({drag.x - drag.offsetX}px, {drag.y -
+        drag.offsetY}px, 0)"
     >
       {#each drag.group as element, i (i)}
         <ElementPiece {element} grabbed />
@@ -433,7 +499,9 @@
     <div
       class="ghost"
       style:transform="translate3d({flight.x}px, {flight.y}px, 0)"
-      style:transition={flying ? `transform ${FLIGHT_MS}ms cubic-bezier(0.3, 0, 0.2, 1)` : "none"}
+      style:transition={flying
+        ? `transform ${FLIGHT_MS}ms cubic-bezier(0.3, 0, 0.2, 1)`
+        : "none"}
     >
       {#each flight.group as element, i (i)}
         <ElementPiece {element} grabbed />
@@ -560,8 +628,8 @@
 
   .platform-row {
     display: flex;
-    justify-content: center;
-    gap: clamp(0.4rem, 2vw, 1.25rem);
+    justify-content: space-evenly;
+    width: 100%;
   }
 
   .ghost {

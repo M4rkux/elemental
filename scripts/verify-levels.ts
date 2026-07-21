@@ -58,6 +58,15 @@ for (const file of files) {
 				);
 			}
 		}
+		if (platform.stoneSecret && platform.hidden?.length) {
+			problems.push(`platform ${i} mixes stoneSecret with hidden`);
+		}
+		if (platform.stoneSecret && platform.type !== 'neutral') {
+			problems.push(`platform ${i} stoneSecret on a restricted platform`);
+		}
+		if (platform.stoneSecret && platform.elements.length === 0) {
+			problems.push(`platform ${i} is a stone sealing nothing`);
+		}
 	}
 	if (isWon(board.stacks, board.types, restricted)) problems.push('already won at start');
 	if (board.stacks.some((s, i) => isComplete(s, board.types[i], restricted))) {
