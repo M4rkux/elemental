@@ -1,0 +1,58 @@
+{
+	"number": 32,
+	"stage": 4,
+	"name": "Paired Stones",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth"
+				],
+				"stoneSecret": "air"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"air",
+					"fire"
+				],
+				"stoneSecret": "water"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"fire",
+					"earth"
+				]
+			}
+		]
+	}
+}

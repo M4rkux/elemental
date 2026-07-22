@@ -1,0 +1,57 @@
+{
+	"number": 29,
+	"stage": 3,
+	"name": "Deep Roots",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "earth",
+				"elements": [
+					"earth",
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"fire",
+					"water"
+				],
+				"stoneSecret": "earth"
+			}
+		]
+	}
+}

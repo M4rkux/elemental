@@ -1,0 +1,67 @@
+{
+	"number": 35,
+	"stage": 4,
+	"name": "Veiled Twins",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"air",
+					"earth"
+				],
+				"hidden": [
+					1
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"air",
+					"earth"
+				],
+				"hidden": [
+					0
+				],
+				"stoneSecret": "water"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air",
+					"fire"
+				],
+				"hidden": [
+					0
+				],
+				"stoneSecret": "earth"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
+				]
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"fire",
+					"water"
+				]
+			}
+		]
+	}
+}

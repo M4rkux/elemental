@@ -95,7 +95,9 @@
         style:--cascade-delay={cascadeOrder !== null
           ? `${(cascadeOrder * 3 + i) * 55}ms`
           : null}
-        style:--cascade-drop={cascadeOrder !== null ? `${i * 4 + 0.5}rem` : null}
+        style:--cascade-drop={cascadeOrder !== null
+          ? `${i * 4 + 0.5}rem`
+          : null}
         aria-label={slot.revealed
           ? `${slot.element} element`
           : "mystery element"}
@@ -115,12 +117,48 @@
     {/each}
 
     {#if sealed || stoneBreaking}
-      <div
-        class="stone-seal"
-        class:stone-seal--breaking={stoneBreaking}
-        title="Breaks when {stoneElement} is completed elsewhere"
-      >
-        <span class="stone-badge">
+      <div class="stone-seal">
+        <div class="stone-rock" class:stone-rock--breaking={stoneBreaking}>
+          <svg
+            class="stone-embers"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <polyline
+              class="ember"
+              points="8,22 28,30 22,48 44,54 38,74 58,70"
+            />
+            <polyline
+              class="ember ember--2"
+              points="54,8 62,26 80,29 72,48 90,53"
+            />
+            <polyline class="ember ember--3" points="20,60 36,66 30,84 50,90" />
+          </svg>
+        </div>
+
+        {#if stoneBreaking}
+          <div class="stone-shards" aria-hidden="true">
+            <span class="shard shard--1"></span>
+            <span class="shard shard--2"></span>
+            <span class="shard shard--3"></span>
+            <span class="shard shard--4"></span>
+            <span class="shard shard--5"></span>
+            <span class="shard shard--6"></span>
+            <span class="shard shard--7"></span>
+            <span class="stone-flash"></span>
+            <span class="stone-ring"></span>
+          </div>
+        {/if}
+
+        <span
+          class="stone-badge"
+          class:stone-badge--earth={stoneElement === "earth"}
+          class:stone-badge--fire={stoneElement === "fire"}
+          class:stone-badge--water={stoneElement === "water"}
+          class:stone-badge--air={stoneElement === "air"}
+          title="Breaks when {stoneElement} is completed elsewhere"
+        >
           <ElementIcon element={stoneElement ?? "mystery"} />
         </span>
       </div>
@@ -359,58 +397,322 @@
   }
 
   // A whole rope sealed under a single rock, badged with the element that
-  // breaks it. Covers the individual (mystery) slots underneath so the
-  // column reads as one thing, not a stack of little mysteries.
+  // breaks it elsewhere. Rock shape, embers and shatter physics mirror the
+  // "Stone shattering animation" design reference. Covers the individual
+  // (mystery) slots underneath completely so the column reads as one thing.
   .stone-seal {
     position: absolute;
     inset: 0;
     z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    background: linear-gradient(160deg, #4a4038, #2b241f 60%, #1c1713);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow:
-      inset 0 4px 10px rgba(0, 0, 0, 0.55),
-      inset 0 -3px 6px rgba(255, 255, 255, 0.06),
-      0 6px 14px rgba(0, 0, 0, 0.4);
+  }
+
+  .stone-rock {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    clip-path: polygon(
+      8% 2%,
+      55% 0%,
+      92% 6%,
+      100% 30%,
+      96% 55%,
+      100% 80%,
+      85% 100%,
+      45% 98%,
+      12% 100%,
+      0% 75%,
+      4% 45%,
+      0% 18%
+    );
+    background:
+      radial-gradient(
+        circle at 28% 18%,
+        rgba(255, 255, 255, 0.16),
+        transparent 42%
+      ),
+      radial-gradient(circle at 72% 68%, rgba(0, 0, 0, 0.35), transparent 46%),
+      linear-gradient(160deg, #5a4d3e, #372c22 45%, #1e160f 100%);
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+    transform-origin: 50% 50%;
+    animation: rock-idle 4.5s ease-in-out infinite;
 
     &--breaking {
-      animation: shatter 0.7s cubic-bezier(0.5, 0, 0.6, 1) both;
-      pointer-events: none;
+      animation: rock-break-flash 0.5s ease-out forwards;
     }
   }
 
+  .stone-embers {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .ember {
+    fill: none;
+    stroke: rgba(255, 140, 70, 0.85);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 4px rgba(255, 120, 60, 0.85));
+    animation: ember-pulse 2.3s ease-in-out infinite;
+
+    &--2 {
+      stroke: rgba(255, 140, 70, 0.6);
+      stroke-width: 1.3;
+      animation-duration: 2.7s;
+      animation-delay: 0.5s;
+    }
+
+    &--3 {
+      stroke: rgba(255, 140, 70, 0.55);
+      stroke-width: 1.2;
+      animation-duration: 3.1s;
+      animation-delay: 1s;
+    }
+  }
+
+  .stone-shards {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+
+  .shard {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        circle at 28% 18%,
+        rgba(255, 255, 255, 0.16),
+        transparent 42%
+      ),
+      radial-gradient(circle at 72% 68%, rgba(0, 0, 0, 0.35), transparent 46%),
+      linear-gradient(160deg, #5a4d3e, #372c22 45%, #1e160f 100%);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+    animation-duration: 0.7s;
+    animation-timing-function: cubic-bezier(0.3, 0.6, 0.4, 1);
+    animation-fill-mode: forwards;
+
+    &--1 {
+      clip-path: polygon(8% 2%, 55% 0%, 40% 35%, 15% 45%, 0% 30%);
+      animation-name: shard-fly-1;
+    }
+    &--2 {
+      clip-path: polygon(55% 0%, 92% 6%, 100% 30%, 70% 40%, 40% 35%);
+      animation-name: shard-fly-2;
+    }
+    &--3 {
+      clip-path: polygon(100% 30%, 96% 55%, 75% 68%, 70% 40%);
+      animation-name: shard-fly-3;
+    }
+    &--4 {
+      clip-path: polygon(0% 30%, 15% 45%, 35% 60%, 25% 75%, 0% 60%);
+      animation-name: shard-fly-4;
+    }
+    &--5 {
+      clip-path: polygon(15% 45%, 40% 35%, 70% 40%, 75% 68%, 50% 78%, 35% 60%);
+      animation-name: shard-fly-5;
+    }
+    &--6 {
+      clip-path: polygon(
+        75% 68%,
+        96% 55%,
+        100% 80%,
+        85% 100%,
+        45% 98%,
+        50% 78%
+      );
+      animation-name: shard-fly-6;
+    }
+    &--7 {
+      clip-path: polygon(0% 60%, 25% 75%, 35% 60%, 50% 78%, 12% 100%, 0% 75%);
+      animation-name: shard-fly-7;
+    }
+  }
+
+  @keyframes shard-fly-1 {
+    to {
+      transform: translate(-68px, -92px) rotate(-150deg);
+      opacity: 0;
+    }
+  }
+  @keyframes shard-fly-2 {
+    to {
+      transform: translate(6px, -118px) rotate(170deg);
+      opacity: 0;
+    }
+  }
+  @keyframes shard-fly-3 {
+    to {
+      transform: translate(88px, -70px) rotate(210deg);
+      opacity: 0;
+    }
+  }
+  @keyframes shard-fly-4 {
+    to {
+      transform: translate(-104px, 8px) rotate(-210deg);
+      opacity: 0;
+    }
+  }
+  @keyframes shard-fly-5 {
+    to {
+      transform: translate(84px, 26px) rotate(190deg);
+      opacity: 0;
+    }
+  }
+  @keyframes shard-fly-6 {
+    to {
+      transform: translate(58px, 104px) rotate(230deg);
+      opacity: 0;
+    }
+  }
+  @keyframes shard-fly-7 {
+    to {
+      transform: translate(-62px, 102px) rotate(-190deg);
+      opacity: 0;
+    }
+  }
+
+  .stone-flash {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(255, 235, 200, 0.95),
+      rgba(255, 140, 60, 0.55) 40%,
+      transparent 72%
+    );
+    animation: stone-flash-burst 0.5s ease-out forwards;
+    pointer-events: none;
+  }
+
+  .stone-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 3.6rem;
+    height: 3.6rem;
+    margin: -1.8rem 0 0 -1.8rem;
+    border: 3px solid rgba(255, 180, 120, 0.9);
+    border-radius: 50%;
+    animation: stone-ring-burst 0.9s ease-out 0.15s both;
+    pointer-events: none;
+  }
+
+  // Just the symbol, carved into the rock — not a floating badge. A tight
+  // colored glow plus a dark contact shadow keep it readable against the
+  // rock's texture whatever the underlying gradient looks like there.
   .stone-badge {
-    width: 2.1rem;
-    height: 2.1rem;
-    --icon-size: 78%;
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    width: 2.6rem;
+    height: 2.6rem;
+    --icon-size: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.25));
-    box-shadow:
-      0 2px 6px rgba(0, 0, 0, 0.5),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.35),
-      inset 0 2px 3px rgba(255, 255, 255, 0.2);
+    animation: badge-glow 2.4s ease-in-out infinite;
+
+    &--earth {
+      --badge-glow: var(--element-earth-glow);
+    }
+    &--fire {
+      --badge-glow: var(--element-fire-glow);
+    }
+    &--water {
+      --badge-glow: var(--element-water-glow);
+    }
+    &--air {
+      --badge-glow: var(--element-air-glow);
+    }
   }
 
-  @keyframes shatter {
-    0% {
-      transform: scale(1) rotate(0);
-      opacity: 1;
-      filter: brightness(1);
+  @keyframes rock-idle {
+    0%,
+    100% {
+      transform: rotate(0deg) translate(0, 0);
     }
     30% {
-      transform: scale(1.06) rotate(-2deg);
-      filter: brightness(2.2);
+      transform: rotate(-0.4deg) translate(-0.5px, 0.3px);
+    }
+    70% {
+      transform: rotate(0.3deg) translate(0.5px, -0.3px);
+    }
+  }
+
+  @keyframes rock-break-flash {
+    0% {
+      filter: brightness(1) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+      opacity: 1;
+    }
+    25% {
+      filter: brightness(2.6) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
     }
     100% {
-      transform: scale(1.4) rotate(6deg);
+      filter: brightness(1.4) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
       opacity: 0;
-      filter: brightness(1);
+    }
+  }
+
+  @keyframes ember-pulse {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes stone-flash-burst {
+    0% {
+      transform: scale(0.2);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(3.4);
+      opacity: 0;
+    }
+  }
+
+  @keyframes stone-ring-burst {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    15% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(2.8);
+      opacity: 0;
+    }
+  }
+
+  @keyframes badge-glow {
+    0%,
+    100% {
+      filter: drop-shadow(
+          0 0 3px var(--badge-glow, var(--element-mystery-glow))
+        )
+        drop-shadow(0 0 3px var(--badge-glow, var(--element-mystery-glow)))
+        drop-shadow(0 2px 2px rgba(0, 0, 0, 0.75));
+    }
+    50% {
+      filter: drop-shadow(
+          0 0 8px var(--badge-glow, var(--element-mystery-glow))
+        )
+        drop-shadow(0 0 8px var(--badge-glow, var(--element-mystery-glow)))
+        drop-shadow(0 2px 2px rgba(0, 0, 0, 0.75));
     }
   }
 
@@ -455,9 +757,21 @@
     .slot {
       transition: none;
     }
-    .stone-seal--breaking {
+    .stone-rock {
+      animation: none;
+    }
+    .stone-rock--breaking {
       animation: none;
       opacity: 0;
+    }
+    .ember,
+    .stone-badge {
+      animation: none;
+    }
+    .shard,
+    .stone-flash,
+    .stone-ring {
+      display: none;
     }
     .burst-ring {
       display: none;

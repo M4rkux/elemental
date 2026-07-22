@@ -58,9 +58,6 @@ for (const file of files) {
 				);
 			}
 		}
-		if (platform.stoneSecret && platform.hidden?.length) {
-			problems.push(`platform ${i} mixes stoneSecret with hidden`);
-		}
 		if (platform.stoneSecret && platform.type !== 'neutral') {
 			problems.push(`platform ${i} stoneSecret on a restricted platform`);
 		}

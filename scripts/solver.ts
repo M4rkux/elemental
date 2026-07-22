@@ -18,12 +18,15 @@ export interface Board {
 	stacks: Stack[];
 	/** Per platform, the element that must be completed elsewhere to break its stone seal. */
 	stoneSecret: (Element | null)[];
+	/** Per platform, indexes that stay hidden as an ordinary mystery even after a stone seal breaks. */
+	hidden: number[][];
 }
 
 export function boardFromLevel(data: LevelGameData): Board {
 	return {
 		types: data.platforms.map((p) => p.type),
 		stoneSecret: data.platforms.map((p) => p.stoneSecret ?? null),
+		hidden: data.platforms.map((p) => p.hidden ?? []),
 		stacks: data.platforms.map((p) =>
 			p.elements.map((element, i) => ({
 				element,
@@ -35,8 +38,13 @@ export function boardFromLevel(data: LevelGameData): Board {
 	};
 }
 
+// The bottom slot is the sealed/broken tell: sealed forces it hidden too,
+// and breaking always reveals it (even when an ordinary mystery elsewhere on
+// the same platform stays hidden), so it can't be confused with that case.
 function isSealed(stack: Stack, need: Element | null): boolean {
-	return need !== null && stack.some((s) => !s.revealed);
+	if (need === null) return false;
+	const bottom = stack[stack.length - 1];
+	return bottom !== undefined && !bottom.revealed;
 }
 
 /** Breaks any stone seal whose required element just got completed on another platform. */
@@ -44,6 +52,7 @@ function breakStones(
 	stacks: Stack[],
 	types: PlatformType[],
 	stoneSecret: (Element | null)[],
+	hidden: number[][],
 	restricted: Set<Element>
 ): Stack[] {
 	return stacks.map((stack, i) => {
@@ -53,7 +62,9 @@ function breakStones(
 			(s, j) => j !== i && isComplete(s, types[j], restricted) && s[0].element === need
 		);
 		if (!satisfied) return stack;
-		return stack.map((s) => ({ ...s, revealed: true }));
+		const own = new Set(hidden[i]);
+		const last = stack.length - 1;
+		return stack.map((s, idx) => ({ ...s, revealed: !own.has(idx) || idx === last }));
 	});
 }
 
@@ -158,7 +169,7 @@ export function solve(board: Board): number {
 			const group = next[from].splice(index);
 			next[from] = reveal(next[from]);
 			next[to].push(...group);
-			next = breakStones(next, board.types, board.stoneSecret, restricted);
+			next = breakStones(next, board.types, board.stoneSecret, board.hidden, restricted);
 			const result = dfs(next, depth + 1);
 			if (result !== -1) return result;
 		}

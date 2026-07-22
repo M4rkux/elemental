@@ -1,0 +1,58 @@
+{
+	"number": 30,
+	"stage": 3,
+	"name": "Twin Seals",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
+				],
+				"stoneSecret": "fire"
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"earth",
+					"air"
+				],
+				"stoneSecret": "water"
+			}
+		]
+	}
+}

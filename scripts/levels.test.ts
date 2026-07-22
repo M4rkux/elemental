@@ -72,11 +72,10 @@ describe.each(files)('%s', (file) => {
 		}
 	});
 
-	it('keeps stone-secret platforms neutral, non-empty, and free of ordinary hidden elements', () => {
+	it('keeps stone-secret platforms neutral and non-empty', () => {
 		for (const platform of level.data.platforms) {
 			if (!platform.stoneSecret) continue;
 			expect(platform.type).toBe('neutral');
-			expect(platform.hidden ?? []).toHaveLength(0);
 			expect(platform.elements.length).toBeGreaterThan(0);
 		}
 	});

@@ -1,0 +1,58 @@
+{
+	"number": 33,
+	"stage": 4,
+	"name": "Chained Depths",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"water",
+					"air",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				],
+				"stoneSecret": "water"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"earth",
+					"air",
+					"earth"
+				],
+				"stoneSecret": "fire"
+			}
+		]
+	}
+}

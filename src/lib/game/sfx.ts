@@ -22,6 +22,7 @@ const GRAB_VOLUME = 0.2;
 const TAP_VOLUME = 1;
 const REVEAL_VOLUME = 0.5;
 const COMPLETE_VOLUME = 0.5;
+const STONE_BREAK_VOLUME = 0.6;
 
 // All players share one AudioContext (browsers cap how many a page can
 // have); each carves out its own gain node for its mix level.
@@ -193,6 +194,12 @@ export const tapSound = new OneShotPlayer("/sfx/tap_sound.wav", TAP_VOLUME);
 
 /** Played when a mystery element is revealed. */
 export const revealSound = new OneShotPlayer("/sfx/reveal.wav", REVEAL_VOLUME);
+
+/** Played when a stone seal breaks. */
+export const stoneBreakSound = new OneShotPlayer(
+  "/sfx/rock_shattering.wav",
+  STONE_BREAK_VOLUME,
+);
 
 const COMPLETE_PLAYERS: Record<Element, OneShotPlayer> = {
   earth: new OneShotPlayer("/sfx/earth_complete.m4a", COMPLETE_VOLUME),

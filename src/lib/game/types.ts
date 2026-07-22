@@ -30,7 +30,9 @@ export interface PlatformData {
 	 * element on it starts hidden — including the bottom, unlike `hidden` — and
 	 * the platform can't be picked from or dropped onto. It breaks the moment
 	 * any *other* platform completes with this element, revealing everything
-	 * on it at once. Mutually exclusive with `hidden`.
+	 * on it at once — except indexes also listed in `hidden`, which stay
+	 * covered as an ordinary mystery from then on (same coverage rule: not the
+	 * last index).
 	 */
 	stoneSecret?: Element;
 }

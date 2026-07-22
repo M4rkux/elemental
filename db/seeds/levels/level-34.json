@@ -1,0 +1,58 @@
+{
+	"number": 34,
+	"stage": 4,
+	"name": "Final Seal",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth"
+				]
+			},
+			{
+				"type": "air",
+				"elements": [
+					"air",
+					"earth",
+					"air",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"air",
+					"water"
+				],
+				"stoneSecret": "earth"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"water",
+					"fire"
+				],
+				"stoneSecret": "air"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"fire"
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,57 @@
+{
+	"number": 31,
+	"stage": 4,
+	"name": "Locked Roots",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": []
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"water"
+				],
+				"stoneSecret": "earth"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"air",
+					"air"
+				],
+				"stoneSecret": "fire"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				]
+			},
+			{
+				"type": "earth",
+				"elements": [
+					"earth",
+					"water",
+					"air",
+					"earth"
+				]
+			}
+		]
+	}
+}

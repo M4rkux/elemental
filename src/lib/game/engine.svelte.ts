@@ -23,8 +23,10 @@ import type { Element, ElementSlot, LevelData, PlatformType } from './types';
  * - A stone-secret platform starts entirely hidden — even its bottom, unlike
  *   an ordinary mystery — and can't be picked from or dropped onto. It breaks
  *   the instant any *other* platform completes with the element on its stone,
- *   revealing everything on it at once. Like other reveals, breaking is
- *   permanent: undo doesn't re-seal it.
+ *   revealing everything on it at once, except any of its own elements that
+ *   are *also* an ordinary mystery: those stay hidden and follow the normal
+ *   mystery rule from then on. Like other reveals, breaking is permanent:
+ *   undo doesn't re-seal it.
  */
 export class GameEngine {
 	readonly levelNumber: number;
@@ -35,6 +37,8 @@ export class GameEngine {
 	readonly restrictedElements: ReadonlySet<Element>;
 	/** Per platform, the element that must be completed elsewhere to break its stone seal. */
 	readonly stoneSecret: readonly (Element | null)[];
+	/** Per platform, the indexes that stay hidden as an ordinary mystery even after a stone seal breaks. */
+	private readonly ownHidden: readonly ReadonlySet<number>[];
 
 	platforms = $state<ElementSlot[][]>([]);
 	moves = $state(0);
@@ -58,6 +62,7 @@ export class GameEngine {
 			this.platformTypes.filter((t): t is Element => t !== 'neutral')
 		);
 		this.stoneSecret = level.data.platforms.map((p) => p.stoneSecret ?? null);
+		this.ownHidden = level.data.platforms.map((p) => new Set(p.hidden ?? []));
 		this.platforms = level.data.platforms.map((p) =>
 			p.elements.map((element, i) => ({
 				element,
@@ -68,9 +73,17 @@ export class GameEngine {
 		);
 	}
 
-	/** True while a stone-secret platform's seal hasn't broken yet. */
+	/**
+	 * True while a stone-secret platform's seal hasn't broken yet. The bottom
+	 * slot is the tell: sealed forces it hidden too, and breaking always
+	 * reveals it (even when an ordinary mystery elsewhere on the same
+	 * platform stays hidden), so it can't be confused with that residual case.
+	 */
 	isSealed(platform: number): boolean {
-		return this.stoneSecret[platform] !== null && this.platforms[platform].some((s) => !s.revealed);
+		if (this.stoneSecret[platform] === null) return false;
+		const slots = this.platforms[platform];
+		const bottom = slots[slots.length - 1];
+		return bottom !== undefined && !bottom.revealed;
 	}
 
 	isComplete(platform: number): boolean {
@@ -161,7 +174,12 @@ export class GameEngine {
 				(_, j) => j !== i && this.isComplete(j) && this.platforms[j][0].element === need
 			);
 			if (!satisfied) continue;
-			this.platforms[i] = this.platforms[i].map((s) => ({ ...s, revealed: true }));
+			const hidden = this.ownHidden[i];
+			const last = this.platforms[i].length - 1;
+			this.platforms[i] = this.platforms[i].map((s, idx) => ({
+				...s,
+				revealed: !hidden.has(idx) || idx === last
+			}));
 			this.lastStoneBreak = i;
 		}
 	}

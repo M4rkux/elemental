@@ -1,0 +1,56 @@
+{
+	"number": 28,
+	"stage": 3,
+	"name": "Drowned Hollow",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": []
+			},
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"air",
+					"earth",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				],
+				"stoneSecret": "water"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"water",
+					"water"
+				]
+			}
+		]
+	}
+}

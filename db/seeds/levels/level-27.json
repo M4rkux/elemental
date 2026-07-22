@@ -1,57 +1,35 @@
 {
-	"number": 27,
-	"stage": 3,
-	"name": "Buried Vein",
-	"data": {
-		"maxPerPlatform": 4,
-		"platforms": [
-			{
-				"type": "water",
-				"elements": [
-					"water",
-					"earth",
-					"earth",
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"fire",
-					"air",
-					"fire"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"fire"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water"
-				],
-				"stoneSecret": "fire"
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"fire",
-					"earth",
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"air",
-					"earth"
-				]
-			}
-		]
-	}
+  "number": 27,
+  "stage": 3,
+  "name": "Buried Vein",
+  "data": {
+    "maxPerPlatform": 4,
+    "platforms": [
+      {
+        "type": "water",
+        "elements": ["water", "earth", "earth", "air"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["fire", "air", "fire"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["fire"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["water"],
+        "stoneSecret": "air"
+      },
+      {
+        "type": "neutral",
+        "elements": ["water", "fire", "earth", "air"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["water", "air", "earth"]
+      }
+    ]
+  }
 }

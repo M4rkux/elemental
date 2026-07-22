@@ -4,6 +4,7 @@
     completeSound,
     grabSound,
     revealSound,
+    stoneBreakSound,
     tapSound,
   } from "$lib/game/sfx";
   import type { Element, LevelData } from "$lib/game/types";
@@ -83,6 +84,7 @@
     tapSound.preload();
     revealSound.preload();
     completeSound.preload();
+    stoneBreakSound.preload();
     return () => grabSound.release();
   });
 
@@ -117,17 +119,18 @@
   });
 
   // A stone seal breaks all at once (unlike a single mystery reveal): the
-  // rock shatters — matches the .stone-seal--breaking keyframes in
-  // Platform.svelte — and the real elements underneath are already there to
-  // see once it clears.
-  const STONE_BREAK_MS = 700;
+  // rock flashes, shards fly (0.7s) and the ring burst lands last (0.15s
+  // delay + 0.9s) — matches the .stone-rock/.shard/.stone-ring keyframes in
+  // Platform.svelte. The real elements underneath are already there to see
+  // once it clears.
+  const STONE_BREAK_MS = 1050;
   let breakingStone = $state<number | null>(null);
 
   $effect(() => {
     const platform = engine.lastStoneBreak;
     if (platform === null) return;
     breakingStone = platform;
-    void revealSound.play();
+    void stoneBreakSound.play();
     const timer = setTimeout(() => {
       breakingStone = null;
       engine.lastStoneBreak = null;
