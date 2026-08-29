@@ -2,6 +2,7 @@
   import { GameEngine } from "$lib/game/engine.svelte";
   import {
     completeSound,
+    deniedSound,
     grabSound,
     revealSound,
     stoneBreakSound,
@@ -87,6 +88,7 @@
     completeSound.preload();
     stoneBreakSound.preload();
     vaultUnlockSound.preload();
+    deniedSound.preload();
     return () => grabSound.release();
   });
 
@@ -428,8 +430,16 @@
     group: Element[],
     target: number | null,
   ) {
-    if (target === null || target === openingVaultPlatform) return;
-    if (from === openingVaultPlatform || !engine.move(from, index, target)) return;
+    // No target under the release point — a silent cancel, not a wrong move.
+    if (target === null) return;
+    if (
+      target === openingVaultPlatform ||
+      from === openingVaultPlatform ||
+      !engine.move(from, index, target)
+    ) {
+      void deniedSound.play();
+      return;
+    }
     spawnBurst(target, group[0], group.length);
     void tapSound.play();
     // Complete platforms reject drops, so completeness here means the
@@ -475,11 +485,12 @@
     if (moved) return; // swipe/scroll gesture, not a tap — leave the selection popped
     grabSound.release();
     const target = targetAt(event.clientX, event.clientY, selected.from);
-    if (
-      target !== null &&
-      engine.canDrop(target, selected.group[0], selected.group.length)
-    ) {
-      flyToPlacement(selected.from, selected.index, selected.group, target);
+    if (target !== null) {
+      if (engine.canDrop(target, selected.group[0], selected.group.length)) {
+        flyToPlacement(selected.from, selected.index, selected.group, target);
+      } else {
+        void deniedSound.play();
+      }
     }
     selected = null;
     dropTarget = null;

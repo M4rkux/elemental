@@ -24,6 +24,7 @@ const REVEAL_VOLUME = 0.5;
 const COMPLETE_VOLUME = 0.5;
 const STONE_BREAK_VOLUME = 0.6;
 const VAULT_UNLOCK_VOLUME = 0.6;
+const DENIED_VOLUME = 0.5;
 
 // All players share one AudioContext (browsers cap how many a page can
 // have); each carves out its own gain node for its mix level.
@@ -146,6 +147,8 @@ export const grabSound = new GrabSoundPlayer();
 class OneShotPlayer {
   private gain: GainNode | null = null;
   private buffer: Promise<AudioBuffer | null> | null = null;
+  /** Set once the fetch+decode resolves; lets play() skip the await. */
+  private decoded: AudioBuffer | null = null;
 
   constructor(
     private readonly url: string,
@@ -167,9 +170,11 @@ class OneShotPlayer {
     if (this.buffer) return this.buffer;
     const ctx = this.ensureCtx();
     this.buffer = fetch(this.url)
-      .then(async (response) =>
-        ctx.decodeAudioData(await response.arrayBuffer()),
-      )
+      .then(async (response) => {
+        const decoded = await ctx.decodeAudioData(await response.arrayBuffer());
+        this.decoded = decoded;
+        return decoded;
+      })
       .catch(() => {
         // Drop the failed attempt so a later play can retry the fetch.
         this.buffer = null;
@@ -181,8 +186,19 @@ class OneShotPlayer {
   async play(): Promise<void> {
     const ctx = this.ensureCtx();
     if (ctx.state === "suspended") void ctx.resume();
+    // Play synchronously off the cached buffer when it's ready, so a preloaded
+    // sound fires on the same tick as the event, with no microtask hop.
+    if (this.decoded) {
+      this.fire(ctx, this.decoded);
+      return;
+    }
     const buffer = await this.load();
     if (!buffer || !this.gain) return;
+    this.fire(ctx, buffer);
+  }
+
+  private fire(ctx: AudioContext, buffer: AudioBuffer): void {
+    if (!this.gain) return;
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     source.connect(this.gain);
@@ -207,6 +223,9 @@ export const vaultUnlockSound = new OneShotPlayer(
   "/sfx/unlocking.wav",
   VAULT_UNLOCK_VOLUME,
 );
+
+/** Played when a group is dropped on a platform that won't take it. */
+export const deniedSound = new OneShotPlayer("/sfx/denied.wav", DENIED_VOLUME);
 
 const COMPLETE_PLAYERS: Record<Element, OneShotPlayer> = {
   earth: new OneShotPlayer("/sfx/earth_complete.m4a", COMPLETE_VOLUME),
