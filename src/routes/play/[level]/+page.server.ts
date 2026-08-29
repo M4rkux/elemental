@@ -1,13 +1,18 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { inArray } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { levels } from '$lib/server/db/schema';
+import { bestSteps, isUnlocked } from '$lib/server/progress';
 import type { LevelData } from '$lib/game/types';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const number = Number(params.level);
 	if (!Number.isInteger(number) || number < 1) error(404, `Level "${params.level}" not found`);
+
+	// The unlock check is server-side now, so tampering with client storage
+	// (or just typing the URL) can't skip levels.
+	if (!(await isUnlocked(locals.playerId, number))) redirect(303, '/');
 
 	// One query fetches the level and tells whether a next one exists.
 	const rows = await db
@@ -20,5 +25,5 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const level: LevelData = { number: row.number, stage: row.stage, name: row.name, data: row.data };
 	const nextNumber = rows.some((r) => r.number === number + 1) ? number + 1 : undefined;
-	return { level, nextNumber };
+	return { level, nextNumber, best: await bestSteps(locals.playerId, number) };
 };

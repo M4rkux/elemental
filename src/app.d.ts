@@ -3,7 +3,10 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			/** Anonymous player id from the `eid` cookie; set in hooks.server.ts. */
+			playerId: string;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}

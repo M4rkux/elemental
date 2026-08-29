@@ -17,12 +17,21 @@
   let {
     level,
     nextHref,
+    best = null,
+    winOutcome = null,
     onwin,
     onrestart,
   }: {
     level: LevelData;
     nextHref?: string;
-    onwin?: () => void;
+    /** Player's fewest-ever moves on this level (server DB), or null if unsolved. */
+    best?: number | null;
+    /** How this session's win compares to the player's history on this level. */
+    winOutcome?: "first" | "record" | "tied" | "worse" | null;
+    onwin?: (
+      solution: { from: number; to: number; count: number }[],
+      moveCount: number,
+    ) => void;
     onrestart: () => void;
   } = $props();
 
@@ -70,9 +79,23 @@
 
   let showWin = $state(false);
 
+  // The recorded score is the move counter shown in the HUD — every move
+  // counts, undo included. (The server replays engine.solution to prove the
+  // level was really solved, then clamps the score up to that length.)
+  let solvedIn = $derived(engine.moves);
+
+  // Fire onwin exactly once, on the not-won → won transition. A plain flag
+  // (not $state) so nothing onwin touches can loop this effect back.
+  let notified = false;
+  $effect(() => {
+    if (engine.won && !notified) {
+      notified = true;
+      onwin?.(engine.solution, engine.moves);
+    }
+  });
+
   $effect(() => {
     if (!engine.won) return;
-    onwin?.();
     // The win overlay waits for the last platform's fill animation.
     const timer = setTimeout(() => (showWin = true), WIN_ANIMATION_MS);
     return () => clearTimeout(timer);
@@ -160,7 +183,9 @@
     color: KeyColor;
     phase: "flight" | "unlocking" | "opening" | "revealing";
   } | null>(null);
-  let keyFlight = $state<{ color: KeyColor; x: number; y: number } | null>(null);
+  let keyFlight = $state<{ color: KeyColor; x: number; y: number } | null>(
+    null,
+  );
   let keyFlying = $state(false);
   // While a vault plays out, only undo and the vault's own column are frozen —
   // moves elsewhere on the board stay live.
@@ -222,7 +247,8 @@
   function vaultPhaseFor(
     i: number,
   ): "sealed" | "unlocking" | "opening" | "revealing" | null {
-    if (vault?.platform === i) return vault.phase === "flight" ? "sealed" : vault.phase;
+    if (vault?.platform === i)
+      return vault.phase === "flight" ? "sealed" : vault.phase;
     return engine.isLocked(i) ? "sealed" : null;
   }
 
@@ -625,10 +651,7 @@
         ? `transform ${VAULT_FLIGHT_MS}ms cubic-bezier(0.35, 0, 0.65, 1)`
         : "none"}
     >
-      <span
-        class="key-flight-icon"
-        style:--pc="var(--key-{keyFlight.color})"
-      >
+      <span class="key-flight-icon" style:--pc="var(--key-{keyFlight.color})">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <circle cx="27" cy="50" r="19" fill="var(--vault-gold)" />
           <circle
@@ -641,9 +664,30 @@
             opacity="0.8"
           />
           <circle cx="27" cy="50" r="7.5" fill="var(--pc)" />
-          <rect x="40" y="44" width="50" height="12" rx="5" fill="var(--vault-gold)" />
-          <rect x="66" y="55" width="8" height="17" rx="3" fill="var(--vault-gold)" />
-          <rect x="80" y="55" width="8" height="13" rx="3" fill="var(--vault-gold)" />
+          <rect
+            x="40"
+            y="44"
+            width="50"
+            height="12"
+            rx="5"
+            fill="var(--vault-gold)"
+          />
+          <rect
+            x="66"
+            y="55"
+            width="8"
+            height="17"
+            rx="3"
+            fill="var(--vault-gold)"
+          />
+          <rect
+            x="80"
+            y="55"
+            width="8"
+            height="13"
+            rx="3"
+            fill="var(--vault-gold)"
+          />
         </svg>
       </span>
     </div>
@@ -654,7 +698,16 @@
       <div class="win-panel panel">
         <div class="win-eyebrow">Level {engine.levelNumber} complete</div>
         <h2>Balance Restored</h2>
-        <p>Solved in {engine.moves} moves</p>
+        <p>
+          Solved in {solvedIn} moves
+          {#if winOutcome === "record"}
+            <span class="win-best">· new best</span>
+          {:else if winOutcome === "tied"}
+            <span class="win-best">· your best</span>
+          {:else if winOutcome === "worse" && best !== null}
+            <span class="win-dim">· best {best}</span>
+          {/if}
+        </p>
         <div class="win-actions">
           {#if nextHref}
             <a class="hud-button hud-button--primary gold-pill" href={nextHref}
@@ -806,7 +859,8 @@
     width: 2rem;
     height: 2rem;
     animation: key-turn 620ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
-    filter: drop-shadow(0 0 8px var(--pc)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.7));
+    filter: drop-shadow(0 0 8px var(--pc))
+      drop-shadow(0 3px 4px rgba(0, 0, 0, 0.7));
 
     svg {
       display: block;
@@ -862,6 +916,15 @@
       margin: 0.6rem 0 1.5rem;
       font-size: 0.95rem;
       color: var(--ink-dim);
+    }
+
+    .win-best {
+      color: var(--gold-2);
+      font-weight: 700;
+    }
+
+    .win-dim {
+      color: var(--ink-dimmer);
     }
   }
 

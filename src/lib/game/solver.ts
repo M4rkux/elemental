@@ -11,7 +11,7 @@
  * once the matching-colour key is the exposed bottom of any rope. A keyed
  * element (and everything above it) can't be picked until its vault opens.
  */
-import type { Element, ElementSlot, KeyColor, LevelGameData, PlatformType } from '../src/lib/game/types';
+import type { Element, ElementSlot, KeyColor, LevelGameData, PlatformType } from './types';
 
 export const MAX_PER_PLATFORM = 4;
 
@@ -271,8 +271,15 @@ export function solve(board: Board): number {
 	return dfs(start, 0);
 }
 
-/** Like `solve`, but returns the actual [from, pickIndex, to] moves (or null). */
-export function solvePath(board: Board): [number, number, number][] | null {
+/** One committed move, in the shape the engine records its history. */
+export interface SolutionMove {
+	from: number;
+	to: number;
+	count: number;
+}
+
+/** Like `solve`, but returns the actual moves (engine-history shape), or null. */
+export function solvePath(board: Board): SolutionMove[] | null {
 	const visited = new Set<string>();
 	const limit = 80;
 	const restricted = restrictedElements(board.types);
@@ -285,25 +292,93 @@ export function solvePath(board: Board): [number, number, number][] | null {
 		restricted
 	);
 
-	function dfs(stacks: Stack[], depth: number): [number, number, number][] | null {
+	function dfs(stacks: Stack[], depth: number): SolutionMove[] | null {
 		if (isWon(stacks, board.types, restricted)) return [];
 		if (depth >= limit) return null;
 		const key = stateKey(stacks, board.types);
 		if (visited.has(key)) return null;
 		visited.add(key);
 
-		for (const move of legalMoves(stacks, board.types, restricted, board.stoneSecret, board.lock)) {
-			const [from, index, to] = move;
+		for (const [from, index, to] of legalMoves(
+			stacks,
+			board.types,
+			restricted,
+			board.stoneSecret,
+			board.lock
+		)) {
 			let next = stacks.map((s) => [...s]);
 			const group = next[from].splice(index);
 			next[from] = reveal(next[from]);
 			next[to].push(...group);
 			next = resolve(next, board.types, board.stoneSecret, board.lock, board.hidden, restricted);
 			const rest = dfs(next, depth + 1);
-			if (rest) return [move, ...rest];
+			if (rest) return [{ from, to, count: stacks[from].length - index }, ...rest];
 		}
 		return null;
 	}
 
 	return dfs(start, 0);
+}
+
+/** The board's opening position, with stone/vault seals resolved. */
+export function initialState(board: Board): Stack[] {
+	return resolve(
+		board.stacks.map((s) => [...s]),
+		board.types,
+		board.stoneSecret,
+		board.lock,
+		board.hidden,
+		restrictedElements(board.types)
+	);
+}
+
+/**
+ * Applies one committed move (engine-history shape) to a board state, returning
+ * the next stacks, or null if the move is illegal. Seals resolve after it.
+ */
+export function applyMove(board: Board, stacks: Stack[], move: SolutionMove): Stack[] | null {
+	if (
+		!move ||
+		!Number.isInteger(move.from) ||
+		!Number.isInteger(move.to) ||
+		!Number.isInteger(move.count) ||
+		move.count < 1 ||
+		move.from < 0 ||
+		move.from >= stacks.length ||
+		move.to < 0 ||
+		move.to >= stacks.length
+	) {
+		return null;
+	}
+	const restricted = restrictedElements(board.types);
+	// The engine records the group size; the pick index is whatever leaves
+	// exactly that many pieces below it at the time of the move.
+	const index = stacks[move.from].length - move.count;
+	if (index < 0) return null;
+	const legal = legalMoves(stacks, board.types, restricted, board.stoneSecret, board.lock).some(
+		([f, i, t]) => f === move.from && i === index && t === move.to
+	);
+	if (!legal) return null;
+
+	const next = stacks.map((s) => [...s]);
+	const group = next[move.from].splice(index);
+	next[move.from] = reveal(next[move.from]);
+	next[move.to].push(...group);
+	return resolve(next, board.types, board.stoneSecret, board.lock, board.hidden, restricted);
+}
+
+/**
+ * Replays a player's committed moves on a fresh board and returns how many
+ * moves it took to win, or null if any move is illegal or the sequence doesn't
+ * reach a win. The server calls this to accept a level completion — the client
+ * is never trusted to say it solved a level.
+ */
+export function replaySolution(board: Board, moves: readonly SolutionMove[]): number | null {
+	if (!Array.isArray(moves) || moves.length === 0 || moves.length > 1000) return null;
+	let stacks: Stack[] | null = initialState(board);
+	for (const move of moves) {
+		stacks = applyMove(board, stacks, move);
+		if (stacks === null) return null;
+	}
+	return isWon(stacks, board.types, restrictedElements(board.types)) ? moves.length : null;
 }

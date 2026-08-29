@@ -34,7 +34,7 @@ import {
 	isWon,
 	restrictedElements,
 	solve
-} from './solver';
+} from '../src/lib/game/solver';
 
 const DEFAULT_PLATFORM_COUNT = 5;
 const MIN_SOLUTION_MOVES = 6;

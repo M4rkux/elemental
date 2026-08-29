@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { LevelGameData } from '../src/lib/game/types';
-import { boardFromLevel, legalMoves, restrictedElements, solve, solvePath } from './solver';
+import {
+	boardFromLevel,
+	legalMoves,
+	replaySolution,
+	restrictedElements,
+	solve,
+	solvePath
+} from '../src/lib/game/solver';
 
 // A tiny winnable board: fire×4, water×4. p0 carries key 'a' on its top fire,
 // covered by one water; p1 is the vault of colour 'a'.
@@ -101,6 +108,17 @@ describe('key & vault solver rules', () => {
 		} else {
 			expect(path).not.toBeNull();
 			expect(path!.length).toBe(len);
+			// The server-side check must accept the solver's own solution...
+			expect(replaySolution(boardFromLevel(data), path!)).toBe(len);
 		}
+	});
+
+	it('replaySolution rejects tampered or losing move sequences', () => {
+		const board = () => boardFromLevel(KEYED);
+		expect(replaySolution(board(), [])).toBeNull();
+		expect(replaySolution(board(), [{ from: 0, to: 1, count: 1 }])).toBeNull(); // p1 is a sealed vault
+		expect(replaySolution(board(), [{ from: 0, to: 2, count: 1 }])).toBeNull(); // legal move, but doesn't win
+		// A garbage move: out-of-range platform.
+		expect(replaySolution(board(), [{ from: 9, to: 2, count: 1 }])).toBeNull();
 	});
 });

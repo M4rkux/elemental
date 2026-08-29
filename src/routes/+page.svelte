@@ -1,11 +1,16 @@
 <script lang="ts">
   import ElementIcon from "$lib/components/ElementIcon.svelte";
-  import { progress } from "$lib/game/progress.svelte";
   import { ELEMENTS, type Element } from "$lib/game/types";
 
   let { data } = $props();
 
-  let playTarget = $derived(progress.firstUnfinished(data.levelNumbers));
+  // First level the player hasn't cleared (server-verified); the last one once
+  // the campaign is done.
+  let playTarget = $derived(
+    data.levelNumbers.find((n) => !data.completed.includes(n)) ??
+      data.levelNumbers.at(-1) ??
+      1,
+  );
 
   // Each element idles with its own signature motion, matching how it
   // animates when picked up mid-game.

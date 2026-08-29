@@ -15,7 +15,7 @@ import {
 	isWon,
 	restrictedElements,
 	solve
-} from './solver';
+} from '../src/lib/game/solver';
 
 const files = readdirSync('db/seeds/levels')
 	.filter((f) => f.endsWith('.json'))

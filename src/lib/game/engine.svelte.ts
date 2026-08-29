@@ -284,6 +284,15 @@ export class GameEngine {
 		return this.history.length > 0;
 	}
 
+	/**
+	 * The committed moves behind the current position, oldest first (undo pops
+	 * the last). Sent to the server on a win so it can replay and verify the
+	 * level was actually solved.
+	 */
+	get solution(): { from: number; to: number; count: number }[] {
+		return this.history.map((m) => ({ ...m }));
+	}
+
 	/** Reverts the last move. The move counter stays as is — undo isn't free. */
 	undo(): boolean {
 		const last = this.history[this.history.length - 1];

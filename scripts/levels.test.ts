@@ -6,9 +6,11 @@ import {
 	boardFromLevel,
 	isComplete,
 	isWon,
+	replaySolution,
 	restrictedElements,
-	solve
-} from './solver';
+	solve,
+	solvePath
+} from '../src/lib/game/solver';
 
 const files = readdirSync('db/seeds/levels')
 	.filter((f) => f.endsWith('.json'))
@@ -124,5 +126,11 @@ describe.each(files)('%s', (file) => {
 
 	it('is solvable', () => {
 		expect(solve(board)).toBeGreaterThan(0);
+	});
+
+	it('has a solution the server-side replay accepts', () => {
+		const path = solvePath(boardFromLevel(level.data));
+		expect(path).not.toBeNull();
+		expect(replaySolution(boardFromLevel(level.data), path!)).toBe(path!.length);
 	});
 });
