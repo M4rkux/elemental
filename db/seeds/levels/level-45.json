@@ -1,0 +1,76 @@
+{
+	"number": 45,
+	"stage": 5,
+	"name": "The Inner Ring",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"fire"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "b"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"fire",
+					"fire",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "c"
+					}
+				],
+				"lock": "a"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"earth"
+				],
+				"lock": "b"
+			},
+			{
+				"type": "neutral",
+				"elements": []
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"water"
+				],
+				"lock": "c"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"earth",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 1,
+						"color": "a"
+					}
+				]
+			}
+		]
+	}
+}

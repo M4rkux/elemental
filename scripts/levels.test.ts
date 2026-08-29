@@ -80,18 +80,17 @@ describe.each(files)('%s', (file) => {
 		}
 	});
 
-	it('keeps vaults neutral, non-empty and free of stones or keys', () => {
+	it('keeps vaults neutral, non-empty and free of stones', () => {
 		for (const platform of level.data.platforms) {
 			if (!platform.lock) continue;
 			expect(KEY_COLORS).toContain(platform.lock);
 			expect(platform.type).toBe('neutral');
 			expect(platform.elements.length).toBeGreaterThan(0);
 			expect(platform.stoneSecret).toBeUndefined();
-			expect(platform.keys ?? []).toHaveLength(0);
 		}
 	});
 
-	it('keeps keys covered, off the bottom, and never on their own element', () => {
+	it('keeps keys covered, off the bottom, and never on their own element or vault', () => {
 		for (const platform of level.data.platforms) {
 			for (const k of platform.keys ?? []) {
 				expect(KEY_COLORS).toContain(k.color);
@@ -100,7 +99,8 @@ describe.each(files)('%s', (file) => {
 				expect(k.index).toBeLessThan(platform.elements.length - 1);
 				expect(platform.elements[k.index]).not.toBe(platform.elements[k.index + 1]);
 				expect(platform.stoneSecret).toBeUndefined();
-				expect(platform.lock).toBeUndefined();
+				// A key may sit inside a vault (chained), but never its own vault.
+				expect(platform.lock).not.toBe(k.color);
 			}
 		}
 	});

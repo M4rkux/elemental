@@ -2,7 +2,7 @@
  * Generates a random, guaranteed-solvable level seed JSON and writes it to
  * db/seeds/levels/level-<number>.json. Run with:
  *
- *   bun scripts/generate-level.ts <number> <name> [seed] [restrictedCount] [stage] [mysteryCount] [stoneSecretCount] [platformCount] [stoneMysteryEach] [keyLockCount]
+ *   bun scripts/generate-level.ts <number> <name> [seed] [restrictedCount] [stage] [mysteryCount] [stoneSecretCount] [platformCount] [stoneMysteryEach] [keyLockCount] [keysInVaults]
  *
  * `stage` defaults to ceil(number / 10): stage 1 holds levels 1–10, and so on.
  * `mysteryCount` elements start hidden on non-stone neutral platforms, always
@@ -12,10 +12,11 @@
  * additionally hides one element (an ordinary mystery, covered the same way)
  * *inside* each stone-secret platform — it stays hidden even after the stone
  * breaks, until normal play reveals it. `keyLockCount` pairs a vault (a whole
- * sealed platform) with a key hung on an element elsewhere, coloured a/b;
- * freeing the key to a rope bottom opens the vault. The element pool is always
- * exactly 4 of each of the 4 elements (16 pieces), however many platforms it's
- * scattered across.
+ * sealed platform) with a key hung on an element elsewhere, coloured a/b/c;
+ * freeing the key to a rope bottom opens the vault. `keysInVaults` of those
+ * keys start hidden inside a different-coloured vault, so the outer one must be
+ * opened first (a chain). The element pool is always exactly 4 of each of the 4
+ * elements (16 pieces), however many platforms it's scattered across.
  */
 import {
 	ELEMENTS,
@@ -65,7 +66,8 @@ function randomPlatforms(
 	stoneSecretCount: number,
 	platformCount: number,
 	stoneMysteryEach: boolean,
-	keyLockCount: number
+	keyLockCount: number,
+	keysInVaults: number
 ): PlatformData[] | null {
 	// `restrictedCount` platforms are locked to distinct random elements, the rest are neutral.
 	const types: PlatformType[] = Array(platformCount).fill('neutral');
@@ -113,13 +115,15 @@ function randomPlatforms(
 	}
 
 	// Key & vault pairs: a whole platform sealed under a coloured vault, plus a
-	// key of that colour hung on a covered, non-bottom element on another rope
-	// that isn't its own kind. Freeing the key to a rope bottom opens the vault.
-	// Picked before ordinary mystery placement so those steer clear.
+	// key of that colour hung on a covered, non-bottom element that isn't its
+	// own kind. `keysInVaults` of the keys are hidden *inside* a different-
+	// coloured vault (a chain: open the outer vault to reach the inner key); the
+	// rest hang on ordinary platforms. Picked before mystery placement so those
+	// steer clear. Cycles (a→b→a) just fail solve() and the caller retries.
 	const lock: (KeyColor | null)[] = types.map(() => null);
 	const keys: { index: number; color: KeyColor }[][] = types.map(() => []);
 	if (keyLockCount > 0) {
-		if (keyLockCount > KEY_COLORS.length) return null;
+		if (keyLockCount > KEY_COLORS.length || keysInVaults >= keyLockCount) return null;
 		const vaultPool = shuffle(
 			types.map((_, i) => i).filter((i) => types[i] === 'neutral' && !stoneSet.has(i) && stacks[i].length > 0),
 			rand
@@ -127,21 +131,61 @@ function randomPlatforms(
 		if (vaultPool.length < keyLockCount) return null;
 		const vaultIndexes = vaultPool.slice(0, keyLockCount);
 		const vaultSet = new Set(vaultIndexes);
-		const keyHosts = new Set<number>();
-		for (let n = 0; n < keyLockCount; n++) {
-			const color = KEY_COLORS[n];
-			lock[vaultIndexes[n]] = color;
-			const hostSpots: [number, number][] = [];
-			for (let i = 0; i < platformCount; i++) {
-				if (types[i] !== 'neutral' || stoneSet.has(i) || vaultSet.has(i) || keyHosts.has(i)) continue;
-				for (let p = 0; p < stacks[i].length - 1; p++) {
-					if (stacks[i][p] !== stacks[i][p + 1]) hostSpots.push([i, p]);
+		const vaultColor = new Map<number, KeyColor>();
+		vaultIndexes.forEach((v, n) => {
+			lock[v] = KEY_COLORS[n];
+			vaultColor.set(v, KEY_COLORS[n]);
+		});
+
+		const spotsOf = (i: number): number[] => {
+			const s: number[] = [];
+			for (let p = 0; p < stacks[i].length - 1; p++) {
+				if (stacks[i][p] !== stacks[i][p + 1]) s.push(p);
+			}
+			return s;
+		};
+
+		const usedHosts = new Set<number>();
+		const colors = KEY_COLORS.slice(0, keyLockCount);
+		const inside = new Set(shuffle([...colors], rand).slice(0, keysInVaults));
+
+		for (const color of colors) {
+			let placed = false;
+			if (inside.has(color)) {
+				const hosts = shuffle(
+					vaultIndexes.filter(
+						(v) => vaultColor.get(v) !== color && !usedHosts.has(v) && spotsOf(v).length > 0
+					),
+					rand
+				);
+				if (hosts.length > 0) {
+					const v = hosts[0];
+					const s = spotsOf(v);
+					keys[v].push({ index: s[Math.floor(rand() * s.length)], color });
+					usedHosts.add(v);
+					placed = true;
 				}
 			}
-			if (hostSpots.length === 0) return null;
-			const [hi, hp] = hostSpots[Math.floor(rand() * hostSpots.length)];
-			keys[hi].push({ index: hp, color });
-			keyHosts.add(hi);
+			if (!placed) {
+				const hosts = shuffle(
+					types
+						.map((_, i) => i)
+						.filter(
+							(i) =>
+								types[i] === 'neutral' &&
+								!stoneSet.has(i) &&
+								!vaultSet.has(i) &&
+								!usedHosts.has(i) &&
+								spotsOf(i).length > 0
+						),
+					rand
+				);
+				if (hosts.length === 0) return null;
+				const hi = hosts[0];
+				const s = spotsOf(hi);
+				keys[hi].push({ index: s[Math.floor(rand() * s.length)], color });
+				usedHosts.add(hi);
+			}
 		}
 	}
 	const coveredOrKeyed = new Set(
@@ -194,7 +238,8 @@ function generate(
 	stoneSecretCount: number,
 	platformCount: number,
 	stoneMysteryEach: boolean,
-	keyLockCount: number
+	keyLockCount: number,
+	keysInVaults: number
 ): { platforms: PlatformData[]; seed: number; solutionMoves: number } {
 	for (let attempt = 0; attempt < 10000; attempt++) {
 		// Attempts get their own stream per seed so nearby seeds don't converge
@@ -207,7 +252,8 @@ function generate(
 			stoneSecretCount,
 			platformCount,
 			stoneMysteryEach,
-			keyLockCount
+			keyLockCount,
+			keysInVaults
 		);
 		if (!platforms) continue;
 		const board: Board = {
@@ -256,6 +302,10 @@ const keyLockCount = process.argv[11] ? Number(process.argv[11]) : 0;
 if (keyLockCount < 0 || keyLockCount > KEY_COLORS.length) {
 	throw new Error(`keyLockCount must be between 0 and ${KEY_COLORS.length}`);
 }
+const keysInVaults = process.argv[12] ? Number(process.argv[12]) : 0;
+if (keysInVaults < 0 || keysInVaults >= Math.max(1, keyLockCount)) {
+	throw new Error(`keysInVaults must be between 0 and ${Math.max(0, keyLockCount - 1)}`);
+}
 
 const { platforms, seed: usedSeed, solutionMoves } = generate(
 	seed,
@@ -264,7 +314,8 @@ const { platforms, seed: usedSeed, solutionMoves } = generate(
 	stoneSecretCount,
 	platformCount,
 	stoneMysteryEach,
-	keyLockCount
+	keyLockCount,
+	keysInVaults
 );
 
 const level: LevelData = {

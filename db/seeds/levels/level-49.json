@@ -1,0 +1,77 @@
+{
+	"number": 49,
+	"stage": 5,
+	"name": "Chainbound",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"earth",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "b"
+					}
+				],
+				"lock": "c"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 1,
+						"color": "a"
+					}
+				],
+				"lock": "b"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"air"
+				],
+				"lock": "a"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"fire"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "c"
+					}
+				]
+			}
+		]
+	}
+}

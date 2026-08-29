@@ -270,3 +270,40 @@ export function solve(board: Board): number {
 
 	return dfs(start, 0);
 }
+
+/** Like `solve`, but returns the actual [from, pickIndex, to] moves (or null). */
+export function solvePath(board: Board): [number, number, number][] | null {
+	const visited = new Set<string>();
+	const limit = 80;
+	const restricted = restrictedElements(board.types);
+	const start = resolve(
+		board.stacks,
+		board.types,
+		board.stoneSecret,
+		board.lock,
+		board.hidden,
+		restricted
+	);
+
+	function dfs(stacks: Stack[], depth: number): [number, number, number][] | null {
+		if (isWon(stacks, board.types, restricted)) return [];
+		if (depth >= limit) return null;
+		const key = stateKey(stacks, board.types);
+		if (visited.has(key)) return null;
+		visited.add(key);
+
+		for (const move of legalMoves(stacks, board.types, restricted, board.stoneSecret, board.lock)) {
+			const [from, index, to] = move;
+			let next = stacks.map((s) => [...s]);
+			const group = next[from].splice(index);
+			next[from] = reveal(next[from]);
+			next[to].push(...group);
+			next = resolve(next, board.types, board.stoneSecret, board.lock, board.hidden, restricted);
+			const rest = dfs(next, depth + 1);
+			if (rest) return [move, ...rest];
+		}
+		return null;
+	}
+
+	return dfs(start, 0);
+}

@@ -9,7 +9,7 @@ export type ElementFace = Element | 'mystery';
 export type PlatformType = 'neutral' | Element;
 
 /** Colour id linking a key to the vault it opens. */
-export const KEY_COLORS = ['a', 'b'] as const;
+export const KEY_COLORS = ['a', 'b', 'c'] as const;
 export type KeyColor = (typeof KEY_COLORS)[number];
 
 /** Runtime state of one element hanging on a rope. */
@@ -48,8 +48,10 @@ export interface PlatformData {
 	stoneSecret?: Element;
 	/**
 	 * Keys hanging on this rope. Each names an index into `elements` and a
-	 * colour. A keyed element can't start at the bottom of its rope, or
-	 * directly on top of another element of its own kind.
+	 * colour. A keyed element can't start at the bottom of its rope, or directly
+	 * on top of another element of its own kind. A key may sit inside a vault
+	 * (this platform also has a `lock`) as long as its colour differs from that
+	 * vault's — opening the outer vault then exposes the inner key.
 	 */
 	keys?: { index: number; color: KeyColor }[];
 	/**

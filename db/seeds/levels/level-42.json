@@ -1,70 +1,48 @@
 {
-	"number": 42,
-	"stage": 5,
-	"name": "The Keyring",
-	"data": {
-		"maxPerPlatform": 4,
-		"platforms": [
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"fire"
-				],
-				"keys": [
-					{
-						"index": 0,
-						"color": "a"
-					}
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"fire"
-				],
-				"keys": [
-					{
-						"index": 0,
-						"color": "b"
-					}
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air",
-					"earth",
-					"water",
-					"water"
-				],
-				"lock": "b"
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air",
-					"earth",
-					"earth",
-					"fire"
-				],
-				"lock": "a"
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air",
-					"fire",
-					"earth"
-				]
-			}
-		]
-	}
+  "number": 42,
+  "stage": 5,
+  "name": "The Keyring",
+  "data": {
+    "maxPerPlatform": 4,
+    "platforms": [
+      {
+        "type": "neutral",
+        "elements": ["water", "fire"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["water", "fire"],
+        "keys": [
+          {
+            "index": 0,
+            "color": "b"
+          }
+        ]
+      },
+      {
+        "type": "neutral",
+        "elements": ["air"]
+      },
+      {
+        "type": "neutral",
+        "elements": ["air", "earth", "water", "water"],
+        "lock": "b",
+        "keys": [
+          {
+            "index": 0,
+            "color": "a"
+          }
+        ]
+      },
+      {
+        "type": "neutral",
+        "elements": ["air", "earth", "earth", "fire"],
+        "lock": "a"
+      },
+      {
+        "type": "neutral",
+        "elements": ["air", "fire", "earth"]
+      }
+    ]
+  }
 }

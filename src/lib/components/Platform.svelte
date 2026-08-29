@@ -118,7 +118,7 @@
           complete={complete || i < lockedCount}
           grabbed={poppedFrom !== null && i >= poppedFrom}
         />
-        {#if slot.key}
+        {#if slot.key && slot.revealed && maskedIndex !== i}
           <KeyBadge color={slot.key} />
         {/if}
         {#if revealingIndex === i || vaultPhase === "revealing"}

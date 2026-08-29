@@ -1,0 +1,77 @@
+{
+	"number": 44,
+	"stage": 5,
+	"name": "Warden's Cache",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"earth"
+				],
+				"lock": "b"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water"
+				],
+				"lock": "a"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"fire"
+				],
+				"lock": "c"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"water"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "b"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"air",
+					"water"
+				],
+				"keys": [
+					{
+						"index": 1,
+						"color": "a"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"water",
+					"fire",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "c"
+					}
+				]
+			}
+		]
+	}
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LevelGameData } from '../src/lib/game/types';
-import { boardFromLevel, legalMoves, restrictedElements, solve } from './solver';
+import { boardFromLevel, legalMoves, restrictedElements, solve, solvePath } from './solver';
 
 // A tiny winnable board: fire×4, water×4. p0 carries key 'a' on its top fire,
 // covered by one water; p1 is the vault of colour 'a'.
@@ -68,5 +68,39 @@ describe('key & vault solver rules', () => {
 			]
 		};
 		expect(solve(boardFromLevel(data))).toBe(-1);
+	});
+
+	it('solvePath agrees with solve on a chained key/vault board', () => {
+		// Freeing the c-key (p0) opens vault c (p1), exposing the a-key inside it;
+		// that opens vault a (p2), exposing the b-key; that opens vault b (p3).
+		const data: LevelGameData = {
+			maxPerPlatform: 4,
+			platforms: [
+				{ type: 'neutral', elements: ['fire', 'earth'], keys: [{ index: 0, color: 'c' }] },
+				{
+					type: 'neutral',
+					elements: ['water', 'earth', 'water', 'water'],
+					lock: 'c',
+					keys: [{ index: 1, color: 'a' }]
+				},
+				{
+					type: 'neutral',
+					elements: ['air', 'fire', 'air', 'air'],
+					lock: 'a',
+					keys: [{ index: 1, color: 'b' }]
+				},
+				{ type: 'neutral', elements: ['earth', 'earth'], lock: 'b' },
+				{ type: 'neutral', elements: ['fire', 'water', 'air'] },
+				{ type: 'neutral', elements: ['water', 'air', 'fire', 'earth'] }
+			]
+		};
+		const path = solvePath(boardFromLevel(data));
+		const len = solve(boardFromLevel(data));
+		if (len === -1) {
+			expect(path).toBeNull();
+		} else {
+			expect(path).not.toBeNull();
+			expect(path!.length).toBe(len);
+		}
 	});
 });

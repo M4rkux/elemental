@@ -1,0 +1,77 @@
+{
+	"number": 50,
+	"stage": 5,
+	"name": "Master Key",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				],
+				"lock": "a"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"water"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "a"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"air"
+				],
+				"lock": "b"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "b"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air",
+					"water",
+					"earth"
+				],
+				"keys": [
+					{
+						"index": 1,
+						"color": "c"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"water",
+					"fire"
+				],
+				"lock": "c"
+			}
+		]
+	}
+}

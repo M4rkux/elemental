@@ -51,9 +51,10 @@
 	--element-mystery-light: #7a4bb0;
 	--element-mystery-glow: rgba(60, 33, 88, 0.6);
 
-	// Key / vault pair colours — distinct from every element.
+	// Key / vault pair colours — distinct from every element and each other.
 	--key-a: oklch(0.72 0.14 195);
 	--key-b: oklch(0.72 0.14 340);
+	--key-c: oklch(0.8 0.15 130);
 	// Vault hardware (gold), shared by keys and locks.
 	--vault-gold: #f0b45e;
 	--vault-gold-light: #fff6e2;

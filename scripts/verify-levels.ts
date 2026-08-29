@@ -69,7 +69,6 @@ for (const file of files) {
 			if (platform.type !== 'neutral') problems.push(`platform ${i} lock on a restricted platform`);
 			if (platform.elements.length === 0) problems.push(`platform ${i} is a vault sealing nothing`);
 			if (platform.stoneSecret) problems.push(`platform ${i} has both a stone and a vault`);
-			if (platform.keys?.length) problems.push(`platform ${i} is both locked and holds a key`);
 		}
 		for (const k of platform.keys ?? []) {
 			if (!KEY_COLORS.includes(k.color)) problems.push(`platform ${i} key colour ${k.color} unknown`);
@@ -78,8 +77,12 @@ for (const file of files) {
 			} else if (platform.elements[k.index] === platform.elements[k.index + 1]) {
 				problems.push(`platform ${i} key at ${k.index} sits directly on its own element`);
 			}
-			if (platform.stoneSecret || platform.lock) {
-				problems.push(`platform ${i} key on a covered platform`);
+			if (platform.stoneSecret) {
+				problems.push(`platform ${i} key on a stone-sealed platform`);
+			}
+			// A key inside a vault is fine (a chained key), but never its own vault.
+			if (platform.lock === k.color) {
+				problems.push(`platform ${i} vault ${k.color} holds its own key`);
 			}
 		}
 	}

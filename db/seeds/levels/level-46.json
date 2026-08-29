@@ -1,0 +1,77 @@
+{
+	"number": 46,
+	"stage": 5,
+	"name": "Cascade of Keys",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "a"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"fire",
+					"fire"
+				],
+				"keys": [
+					{
+						"index": 0,
+						"color": "c"
+					}
+				],
+				"lock": "b"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water"
+				],
+				"lock": "c"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"fire",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 2,
+						"color": "b"
+					}
+				],
+				"lock": "a"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air"
+				]
+			}
+		]
+	}
+}
