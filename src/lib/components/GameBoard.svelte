@@ -626,6 +626,9 @@
     // pointer move; contain stops that repaint/layout work from spreading
     // to siblings. Safe here (unlike on .board) since .ghost is a sibling,
     // not a descendant, so its position:fixed stays viewport-relative.
+    // The padding keeps the top/bottom rows' 3px drop-feedback ring off the
+    // paint-containment clip edge, which was cropping it flat.
+    padding: 4px;
     contain: layout style paint;
   }
 

@@ -175,6 +175,8 @@
     border-radius: 12px;
     transition: background-color 120ms ease;
 
+    // Drop feedback: same 3px ring in both states so the platform never
+    // changes size between valid and invalid, only color.
     &--valid {
       background: rgba(255, 240, 190, 0.15);
       box-shadow: 0 0 0 3px rgba(255, 235, 170, 0.45);
@@ -182,6 +184,7 @@
 
     &--invalid {
       background: rgba(217, 59, 37, 0.15);
+      box-shadow: 0 0 0 3px rgba(217, 59, 37, 0.5);
     }
 
     &--complete .rope-area {
