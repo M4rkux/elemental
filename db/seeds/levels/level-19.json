@@ -1,34 +1,32 @@
 {
 	"number": 19,
 	"stage": 2,
-	"name": "Twilight Stones",
+	"name": "Veiled Balance",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "fire",
+				"type": "neutral",
 				"elements": [
-					"fire",
+					"earth",
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
 					"air",
+					"water",
 					"fire"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"earth",
-					"fire"
-				],
-				"hidden": [
-					0
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
+					"air",
 					"fire",
 					"air",
-					"earth",
 					"earth"
 				],
 				"hidden": [
@@ -39,17 +37,16 @@
 				"type": "neutral",
 				"elements": [
 					"earth",
-					"water",
-					"air",
-					"water"
+					"air"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
+					"fire",
+					"earth",
 					"water",
-					"water",
-					"air"
+					"fire"
 				]
 			}
 		]

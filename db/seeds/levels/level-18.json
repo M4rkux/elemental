@@ -1,55 +1,55 @@
 {
 	"number": 18,
 	"stage": 2,
-	"name": "Phantom Gale",
+	"name": "Twilight Stones",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "water",
+				"type": "fire",
 				"elements": [
-					"water",
-					"earth",
+					"fire",
 					"air",
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"air",
-					"fire",
-					"air"
-				],
-				"hidden": [
-					2
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth",
-					"water",
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"fire",
-					"fire",
-					"water",
-					"air"
-				],
-				"hidden": [
-					2
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
 					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"fire"
+				],
+				"hidden": [
+					0
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air",
+					"earth",
+					"earth"
+				],
+				"hidden": [
+					0
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"air",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"air"
 				]
 			}
 		]

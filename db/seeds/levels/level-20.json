@@ -1,59 +1,55 @@
 {
 	"number": 20,
 	"stage": 2,
-	"name": "Veil of Elements",
+	"name": "Silent Depths",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "air",
+				"type": "neutral",
 				"elements": [
-					"air",
+					"water",
 					"fire",
-					"fire",
-					"water"
+					"earth",
+					"earth"
+				],
+				"hidden": [
+					1
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"earth",
-					"air",
-					"air",
+					"fire",
 					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"air"
 				],
 				"hidden": [
 					0
 				]
 			},
 			{
-				"type": "earth",
+				"type": "neutral",
 				"elements": [
-					"earth"
+					"air",
+					"earth",
+					"air",
+					"fire"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"fire",
+					"water",
 					"air",
 					"water",
-					"fire"
-				],
-				"hidden": [
-					0,
-					1
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"water",
-					"earth"
-				],
-				"hidden": [
-					1
+					"water"
 				]
 			}
 		]

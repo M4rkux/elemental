@@ -1,48 +1,48 @@
 {
 	"number": 2,
 	"stage": 1,
-	"name": "Gentle Breeze",
+	"name": "Shifting Sands",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "neutral",
+				"type": "fire",
 				"elements": [
 					"fire",
-					"air",
 					"fire",
+					"air",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
 					"air"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"earth",
-					"fire",
 					"air",
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
 					"earth",
-					"water"
+					"earth",
+					"fire"
 				]
 			},
 			{
-				"type": "fire",
+				"type": "neutral",
 				"elements": [
 					"fire",
-					"water",
-					"water",
 					"air"
 				]
 			}

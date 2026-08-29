@@ -1,41 +1,16 @@
 {
 	"number": 6,
 	"stage": 1,
-	"name": "Shifting Sands",
+	"name": "Rising Flames",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "fire",
+				"type": "neutral",
 				"elements": [
 					"fire",
 					"fire",
 					"air",
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth",
-					"water",
-					"water"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"water",
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air",
-					"earth",
-					"earth",
 					"fire"
 				]
 			},
@@ -43,7 +18,32 @@
 				"type": "neutral",
 				"elements": [
 					"fire",
+					"air",
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"water",
 					"air"
+				]
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"earth",
+					"water"
 				]
 			}
 		]

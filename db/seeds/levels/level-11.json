@@ -1,52 +1,53 @@
 {
 	"number": 11,
 	"stage": 2,
-	"name": "Veiled Balance",
+	"name": "Clouded Waters",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
 				"type": "neutral",
 				"elements": [
+					"air",
+					"air",
 					"earth",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"earth",
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
 					"water",
+					"fire",
+					"air"
+				],
+				"hidden": [
+					0,
+					1
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
 					"water"
 				]
 			},
 			{
-				"type": "neutral",
-				"elements": [
-					"air",
-					"water",
-					"fire"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air",
-					"fire",
-					"air",
-					"earth"
-				],
-				"hidden": [
-					0
-				]
-			},
-			{
-				"type": "neutral",
+				"type": "earth",
 				"elements": [
 					"earth",
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"fire",
-					"earth",
+					"air",
 					"water",
-					"fire"
+					"water"
 				]
 			}
 		]

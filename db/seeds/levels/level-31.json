@@ -1,54 +1,55 @@
 {
 	"number": 31,
 	"stage": 4,
-	"name": "Locked Roots",
+	"name": "Paired Stones",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
 				"type": "neutral",
 				"elements": [
-					"fire",
 					"earth",
-					"fire",
-					"fire"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": []
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"water",
-					"water"
-				],
-				"stoneSecret": "earth"
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air",
-					"earth",
-					"air",
 					"air"
-				],
-				"stoneSecret": "fire"
+				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"fire"
+					"earth"
+				],
+				"stoneSecret": "air"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"water"
 				]
 			},
 			{
-				"type": "earth",
+				"type": "neutral",
 				"elements": [
+					"fire",
 					"earth",
-					"water",
 					"air",
+					"fire"
+				],
+				"stoneSecret": "water"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"fire",
 					"earth"
 				]
 			}

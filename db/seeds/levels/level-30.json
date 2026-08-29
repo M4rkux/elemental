@@ -1,36 +1,36 @@
 {
 	"number": 30,
 	"stage": 3,
-	"name": "Twin Seals",
+	"name": "Deep Roots",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
 				"type": "neutral",
 				"elements": [
-					"water"
-				],
-				"stoneSecret": "fire"
-			},
-			{
-				"type": "water",
-				"elements": [
+					"earth",
 					"water",
-					"air",
-					"fire"
+					"air"
 				]
 			},
 			{
-				"type": "neutral",
-				"elements": [
-					"water"
-				]
-			},
-			{
-				"type": "neutral",
+				"type": "earth",
 				"elements": [
 					"earth",
-					"air",
+					"fire",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
 					"fire",
 					"fire"
 				]
@@ -39,19 +39,18 @@
 				"type": "neutral",
 				"elements": [
 					"earth",
-					"water",
-					"fire"
+					"air"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
+					"water",
 					"air",
-					"earth",
-					"earth",
-					"air"
+					"fire",
+					"water"
 				],
-				"stoneSecret": "water"
+				"stoneSecret": "earth"
 			}
 		]
 	}

@@ -1,57 +1,57 @@
 {
 	"number": 33,
 	"stage": 4,
-	"name": "Chained Depths",
+	"name": "Final Seal",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
 				"type": "neutral",
 				"elements": [
-					"water",
-					"air"
+					"earth"
 				]
 			},
 			{
-				"type": "fire",
+				"type": "air",
 				"elements": [
-					"fire",
-					"water",
 					"air",
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth",
-					"water"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"fire"
-				],
-				"stoneSecret": "water"
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"fire",
-					"water",
-					"fire"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth",
 					"earth",
 					"air",
 					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"air",
+					"water"
 				],
-				"stoneSecret": "fire"
+				"stoneSecret": "earth"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"water",
+					"fire"
+				],
+				"stoneSecret": "air"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"fire"
+				]
 			}
 		]
 	}

@@ -1,36 +1,15 @@
 {
 	"number": 29,
 	"stage": 3,
-	"name": "Deep Roots",
+	"name": "Drowned Hollow",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
 				"type": "neutral",
 				"elements": [
+					"air",
 					"earth",
-					"water",
-					"air"
-				]
-			},
-			{
-				"type": "earth",
-				"elements": [
-					"earth",
-					"fire",
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"water",
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
 					"fire",
 					"fire"
 				]
@@ -38,6 +17,20 @@
 			{
 				"type": "neutral",
 				"elements": [
+					"water",
+					"earth",
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": []
+			},
+			{
+				"type": "fire",
+				"elements": [
+					"fire",
+					"air",
 					"earth",
 					"air"
 				]
@@ -45,12 +38,18 @@
 			{
 				"type": "neutral",
 				"elements": [
-					"water",
-					"air",
-					"fire",
-					"water"
+					"fire"
 				],
-				"stoneSecret": "earth"
+				"stoneSecret": "water"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"water",
+					"water"
+				]
 			}
 		]
 	}

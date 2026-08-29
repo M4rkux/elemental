@@ -1,42 +1,46 @@
 {
 	"number": 15,
 	"stage": 2,
-	"name": "Masked Flame",
+	"name": "Shrouded Currents",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
 				"type": "neutral",
 				"elements": [
-					"water",
-					"earth",
 					"air",
-					"fire"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"fire",
-					"water",
-					"air"
+					"air",
+					"water"
 				],
 				"hidden": [
 					1
 				]
 			},
 			{
-				"type": "water",
+				"type": "neutral",
 				"elements": [
+					"earth",
 					"water",
-					"earth",
-					"earth",
+					"fire",
 					"air"
+				],
+				"hidden": [
+					0,
+					1
 				]
 			},
 			{
-				"type": "neutral",
+				"type": "fire",
 				"elements": [
+					"fire",
+					"earth",
+					"earth"
+				]
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
 					"air",
 					"fire"
 				]
@@ -49,6 +53,7 @@
 					"fire"
 				],
 				"hidden": [
+					0,
 					1
 				]
 			}

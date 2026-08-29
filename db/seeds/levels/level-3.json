@@ -1,25 +1,15 @@
 {
 	"number": 3,
 	"stage": 1,
-	"name": "Ember Path",
+	"name": "Wild Gale",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "fire",
-				"elements": [
-					"fire",
-					"water",
-					"fire",
-					"earth"
-				]
-			},
-			{
 				"type": "neutral",
 				"elements": [
-					"earth",
-					"water",
-					"air"
+					"air",
+					"fire"
 				]
 			},
 			{
@@ -27,22 +17,32 @@
 				"elements": [
 					"fire",
 					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth",
-					"water",
-					"water",
-					"air"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
 					"air",
-					"fire",
+					"water",
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "earth",
+				"elements": [
+					"earth",
+					"earth",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"water",
+					"earth",
 					"air"
 				]
 			}

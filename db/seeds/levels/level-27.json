@@ -1,35 +1,58 @@
 {
-  "number": 27,
-  "stage": 3,
-  "name": "Buried Vein",
-  "data": {
-    "maxPerPlatform": 4,
-    "platforms": [
-      {
-        "type": "water",
-        "elements": ["water", "earth", "earth", "air"]
-      },
-      {
-        "type": "neutral",
-        "elements": ["fire", "air", "fire"]
-      },
-      {
-        "type": "neutral",
-        "elements": ["fire"]
-      },
-      {
-        "type": "neutral",
-        "elements": ["water"],
-        "stoneSecret": "air"
-      },
-      {
-        "type": "neutral",
-        "elements": ["water", "fire", "earth", "air"]
-      },
-      {
-        "type": "neutral",
-        "elements": ["water", "air", "earth"]
-      }
-    ]
-  }
+	"number": 27,
+	"stage": 3,
+	"name": "Twin Seals",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
+				],
+				"stoneSecret": "fire"
+			},
+			{
+				"type": "water",
+				"elements": [
+					"water",
+					"air",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"air",
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"water",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"earth",
+					"earth",
+					"air"
+				],
+				"stoneSecret": "water"
+			}
+		]
+	}
 }

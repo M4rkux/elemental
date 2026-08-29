@@ -1,14 +1,31 @@
 {
 	"number": 5,
 	"stage": 1,
-	"name": "Rising Flames",
+	"name": "River Stones",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
+				"type": "air",
+				"elements": [
+					"air",
+					"water",
+					"water"
+				]
+			},
+			{
 				"type": "neutral",
 				"elements": [
-					"fire",
+					"air",
+					"earth",
+					"earth",
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
 					"fire",
 					"air",
 					"fire"
@@ -17,33 +34,16 @@
 			{
 				"type": "neutral",
 				"elements": [
+					"water",
+					"earth",
 					"fire",
-					"air",
-					"earth",
 					"water"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"air",
-					"water",
-					"air"
-				]
-			},
-			{
-				"type": "water",
-				"elements": [
-					"water",
-					"earth"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"earth",
-					"earth",
-					"water"
+					"fire"
 				]
 			}
 		]

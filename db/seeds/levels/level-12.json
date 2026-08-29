@@ -1,55 +1,59 @@
 {
 	"number": 12,
 	"stage": 2,
-	"name": "Whispering Mist",
+	"name": "Veil of Elements",
 	"data": {
 		"maxPerPlatform": 4,
 		"platforms": [
 			{
-				"type": "neutral",
+				"type": "air",
 				"elements": [
+					"air",
+					"fire",
+					"fire",
 					"water"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"fire",
 					"earth",
-					"earth",
-					"water"
+					"air",
+					"air",
+					"earth"
 				],
 				"hidden": [
-					2
+					0
+				]
+			},
+			{
+				"type": "earth",
+				"elements": [
+					"earth"
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
 					"fire",
-					"earth",
-					"fire",
+					"air",
+					"water",
 					"fire"
 				],
 				"hidden": [
+					0,
 					1
 				]
 			},
 			{
 				"type": "neutral",
 				"elements": [
-					"air",
-					"air",
 					"water",
-					"air"
-				]
-			},
-			{
-				"type": "neutral",
-				"elements": [
-					"air",
 					"water",
 					"earth"
+				],
+				"hidden": [
+					1
 				]
 			}
 		]
