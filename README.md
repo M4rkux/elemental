@@ -1,79 +1,110 @@
 # Elemental
 
-A wood-themed sorting puzzle built with SvelteKit, TypeScript, Tailwind CSS and SCSS.
+Play it now — [elemental-sort.vercel.app](https://elemental-sort.vercel.app)
 
-Four elements — Earth (brown), Fire (red), Water (blue) and Air (white) — hang
-on ropes below wooden platforms. Sort every element onto its own rope to win.
+A sorting puzzle: four elements — **Earth**, **Fire**, **Water** and **Air** —
+hang tangled on ropes below floating platforms. Untangle them so every rope
+holds one element, and restore the balance.
 
-## Rules
+![Solving the first element](docs/demo.gif)
 
-- Grabbing an element drags it and every element below it; the whole group must be the same element.
-- A group can only be dropped below an element of the same kind (or on an empty rope).
-- Each platform holds at most 4 elements and is complete with 4 of one kind.
-- Mystery elements (dark purple, question mark) are hidden: they can't be picked up — not
-  even grouped with a matching element below — and get revealed when the element below
-  them is removed, i.e. when they become the bottom of their rope.
-- Platforms are neutral or element-restricted (marked with the element's symbol and tint).
-  A restricted platform's first element must be its own element; once occupied it stacks by
-  the normal bottom-match rule, but it only counts as complete with 4 of its own element.
-  An element that has a restricted platform can only be completed there, never on a
-  neutral platform — restricted platforms are always mandatory. Generated levels start
-  restricted platforms with their own element on top.
+## How to play
 
-## Development
+- Grabbing an element takes it **and every element below it** — the whole group
+  must be the same kind.
+- A group drops only onto a rope whose bottom element matches (or onto an empty
+  rope).
+- A platform holds at most 4 elements and is **complete** with 4 of one kind.
+- **Restricted platforms** are tinted and marked with an element's symbol: they
+  only complete with their own element, and that element can _only_ be completed
+  there.
+- **Mystery elements** (purple `?`) are face-down until they reach the bottom of
+  their rope.
+- **Stone seals** cover a whole rope; they shatter when their badged element is
+  completed elsewhere.
+- **Vaults** (`a`/`b`/`c` colours) lock a whole rope until the matching-colour
+  **key** — hung on an element on another rope — is freed to a rope's bottom. A
+  key can be hidden _inside_ another vault, so vaults chain.
 
-The app reads levels from Postgres, so start the database first:
+Campaign progress is stored server-side against an anonymous cookie. A level
+unlocks only once the previous one is completed with a solution the server
+replays and verifies — editing client state doesn't skip anything.
+
+## Run it locally
+
+Needs [Bun](https://bun.sh) and [Docker](https://www.docker.com).
 
 ```sh
-docker compose up -d   # Postgres on localhost:5433 (see .env.example)
+docker compose up -d        # Postgres on localhost:5433
+cp .env.example .env        # DATABASE_URL for the local db
 bun install
-bun run db:migrate     # apply migrations from drizzle/
-bun run db:seed        # upsert levels from db/seeds/levels/
-bun run dev            # start the dev server
+bun run db:migrate          # apply migrations from drizzle/
+bun run db:seed             # load levels from db/seeds/levels/
+bun run dev                 # http://localhost:5173
 ```
 
 Other commands:
 
 ```sh
-bun run build          # production build
-bun run check          # type checking
-bun run test           # vitest: validates every level seed in db/seeds/levels/
-bun run db:generate    # generate a new migration after editing the schema
-bun run db:studio      # browse the database with drizzle studio
+bun run test                # vitest — level seeds + engine/solver checks
+bun run check               # svelte-check / type checking
+bun run build               # production build
+bun run db:studio           # browse the db with Drizzle Studio
+bun run db:generate         # new migration after editing the schema
 ```
 
-## Database
+## Ship to production
 
-- Schema: `src/lib/server/db/schema.ts` (Drizzle ORM, Postgres).
-- Migrations: `drizzle/`, generated with `drizzle-kit generate` and applied with `db:migrate`.
-- `levels` table: `number` is the unique campaign position (1..∞), `stage` groups levels
-  (stage 1 holds levels 1–10, and so on), `data` is the playable board as jsonb
-  (`{ maxPerPlatform, platforms }`).
-- Locally the database runs via `docker-compose.yml`; in production point `DATABASE_URL`
-  at a hosted Postgres (e.g. Neon on Vercel).
-
-## Levels
-
-Level seeds are JSON files in `db/seeds/levels/`, upserted by `bun run db:seed` and
-served to the game by the server routes. The game rules live in
-`src/lib/game/engine.svelte.ts`, mirrored by `scripts/solver.ts`.
-
-Generate a new random, guaranteed-solvable level seed:
+The app deploys to Vercel on push; the database lives on a hosted Postgres
+(Neon). Put its connection string in `.env.production` (gitignored):
 
 ```sh
-bun scripts/generate-level.ts <number> <name> [seed] [restrictedCount] [stage] [mysteryCount]
-# e.g. bun scripts/generate-level.ts 11 "Veiled Balance" 1011 1 2 1
+vercel env pull .env.production --environment=production
 ```
 
-`restrictedCount` (default 1) is how many platforms are locked to a specific element;
-`stage` defaults to `ceil(number / 10)`; `mysteryCount` (default 0) is how many elements
-start hidden.
+Then:
 
-Verify every level seed (solvable, valid element counts, restricted platforms and hidden
-elements well-formed):
+```sh
+git push origin main        # Vercel builds & deploys the app
+
+bun run db:migrate:prod     # only when the schema changed
+bun run db:seed:prod        # only when db/seeds/levels/ changed
+```
+
+Both `:prod` commands run the same scripts as their local counterparts but with
+`--env-file=.env.production`.
+
+## Project layout
+
+| Path                            | What                                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------- |
+| `src/lib/game/engine.svelte.ts` | Game rules the player interacts with                                                  |
+| `src/lib/game/solver.ts`        | Pure mirror of the rules — generation, level checks, **server-side win verification** |
+| `src/lib/server/progress.ts`    | Per-player unlock + best-steps storage                                                |
+| `src/routes/play/[level]/`      | The board, plus `complete/+server.ts` (replay & record a win)                         |
+| `src/hooks.server.ts`           | Mints the anonymous player cookie                                                     |
+| `db/seeds/levels/*.json`        | 50 hand-verified levels across 5 stages                                               |
+| `drizzle/`                      | Schema migrations                                                                     |
+
+### Levels
+
+Generate a random, guaranteed-solvable seed:
+
+```sh
+bun scripts/generate-level.ts <number> <name> [seed] [restrictedCount] [stage] \
+  [mysteryCount] [stoneSecretCount] [platformCount] [stoneMysteryEach] \
+  [keyLockCount] [keysInVaults]
+
+# e.g. a 6-platform level with 3 chained vaults:
+bun scripts/generate-level.ts 51 "New Depths" 1 0 6 0 0 6 0 3 2
+```
+
+Verify every seed (solvable, element counts, restricted platforms, mysteries,
+stones and keys/vaults all well-formed):
 
 ```sh
 bun scripts/verify-levels.ts
 ```
 
-The same checks run as unit tests: `bun run test` (`scripts/levels.test.ts`).
+The same checks — plus an engine-vs-solver consistency sweep — run under
+`bun run test`.
