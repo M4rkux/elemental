@@ -1,0 +1,63 @@
+{
+	"number": 37,
+	"stage": 5,
+	"name": "The Warden's Key",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"earth",
+					"air",
+					"air"
+				],
+				"lock": "a"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air",
+					"air",
+					"water",
+					"water"
+				],
+				"keys": [
+					{
+						"index": 1,
+						"color": "a"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"fire",
+					"water"
+				]
+			}
+		]
+	}
+}

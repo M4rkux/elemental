@@ -1,4 +1,4 @@
-import type { Element, ElementSlot, LevelData, PlatformType } from './types';
+import type { Element, ElementSlot, KeyColor, LevelData, PlatformType } from './types';
 
 /**
  * Core rules:
@@ -27,6 +27,12 @@ import type { Element, ElementSlot, LevelData, PlatformType } from './types';
  *   are *also* an ordinary mystery: those stay hidden and follow the normal
  *   mystery rule from then on. Like other reveals, breaking is permanent:
  *   undo doesn't re-seal it.
+ * - A vault-locked platform is covered the same way (all hidden, no pick/drop).
+ *   It opens when the key of its colour becomes the exposed bottom of any rope.
+ *   Keys never move: an element carrying one, and everything above it on that
+ *   rope, can't be picked up until the key's vault opens. Dropping a group onto
+ *   a rope whose bottom carries a still-active key is refused. Opening is
+ *   permanent and clears the key.
  */
 export class GameEngine {
 	readonly levelNumber: number;
@@ -37,7 +43,9 @@ export class GameEngine {
 	readonly restrictedElements: ReadonlySet<Element>;
 	/** Per platform, the element that must be completed elsewhere to break its stone seal. */
 	readonly stoneSecret: readonly (Element | null)[];
-	/** Per platform, the indexes that stay hidden as an ordinary mystery even after a stone seal breaks. */
+	/** Per platform, the colour of the vault sealing it, if any. */
+	readonly lock: readonly (KeyColor | null)[];
+	/** Per platform, the indexes that stay hidden as an ordinary mystery even after a stone seal or vault opens. */
 	private readonly ownHidden: readonly ReadonlySet<number>[];
 
 	platforms = $state<ElementSlot[][]>([]);
@@ -46,6 +54,12 @@ export class GameEngine {
 	lastReveal = $state<{ platform: number; index: number } | null>(null);
 	/** Set when the last move broke a stone seal; the UI clears it after animating. */
 	lastStoneBreak = $state<number | null>(null);
+	/** Set when the last move opened a vault; the UI clears it after animating. */
+	lastVaultOpen = $state<{
+		platform: number;
+		color: KeyColor;
+		keyFrom: { platform: number; index: number } | null;
+	} | null>(null);
 	private history = $state<{ from: number; to: number; count: number }[]>([]);
 
 	won = $derived(
@@ -62,15 +76,28 @@ export class GameEngine {
 			this.platformTypes.filter((t): t is Element => t !== 'neutral')
 		);
 		this.stoneSecret = level.data.platforms.map((p) => p.stoneSecret ?? null);
+		this.lock = level.data.platforms.map((p) => p.lock ?? null);
 		this.ownHidden = level.data.platforms.map((p) => new Set(p.hidden ?? []));
-		this.platforms = level.data.platforms.map((p) =>
-			p.elements.map((element, i) => ({
+		this.platforms = level.data.platforms.map((p) => {
+			const slots: ElementSlot[] = p.elements.map((element, i) => ({
 				element,
-				// Stone-sealed ropes start fully hidden, bottom included; otherwise
-				// the bottom of a rope is always revealed, whatever the data says.
-				revealed: p.stoneSecret ? false : !p.hidden?.includes(i) || i === p.elements.length - 1
-			}))
-		);
+				// Stone-sealed and vault-locked ropes start fully hidden, bottom
+				// included; otherwise the bottom of a rope is always revealed.
+				revealed:
+					p.stoneSecret || p.lock ? false : !p.hidden?.includes(i) || i === p.elements.length - 1
+			}));
+			for (const k of p.keys ?? []) if (slots[k.index]) slots[k.index].key = k.color;
+			return slots;
+		});
+	}
+
+	/** True while a vault of `color` is still sealed (its rope's bottom hidden). */
+	private vaultSealed(color: KeyColor): boolean {
+		return this.platforms.some((slots, i) => {
+			if (this.lock[i] !== color) return false;
+			const bottom = slots[slots.length - 1];
+			return bottom !== undefined && !bottom.revealed;
+		});
 	}
 
 	/**
@@ -84,6 +111,19 @@ export class GameEngine {
 		const slots = this.platforms[platform];
 		const bottom = slots[slots.length - 1];
 		return bottom !== undefined && !bottom.revealed;
+	}
+
+	/** True while a vault still covers this platform. Same bottom-hidden tell as a stone. */
+	isLocked(platform: number): boolean {
+		if (this.lock[platform] === null) return false;
+		const slots = this.platforms[platform];
+		const bottom = slots[slots.length - 1];
+		return bottom !== undefined && !bottom.revealed;
+	}
+
+	/** Covered by a stone or a vault — can't be picked from or dropped onto. */
+	isCovered(platform: number): boolean {
+		return this.isSealed(platform) || this.isLocked(platform);
 	}
 
 	isComplete(platform: number): boolean {
@@ -115,11 +155,17 @@ export class GameEngine {
 	canPick(platform: number, index: number): boolean {
 		const slots = this.platforms[platform];
 		if (index < 0 || index >= slots.length) return false;
-		if (this.isSealed(platform)) return false;
+		if (this.isCovered(platform)) return false;
 		if (this.isComplete(platform)) return false;
 		if (index < this.lockedCount(platform)) return false;
 		const element = slots[index].element;
-		return slots.slice(index).every((s) => s.revealed && s.element === element);
+		// A group carrying a key whose vault is still sealed is pinned in place.
+		return slots
+			.slice(index)
+			.every(
+				(s) =>
+					s.revealed && s.element === element && !(s.key !== undefined && this.vaultSealed(s.key))
+			);
 	}
 
 	/** The group of elements that would be dragged when grabbing `index`. */
@@ -131,16 +177,19 @@ export class GameEngine {
 
 	canDrop(platform: number, element: Element, count: number): boolean {
 		const slots = this.platforms[platform];
-		// Sealed even when empty or bottom-matching: a covered rope can't be
+		// Covered even when empty or bottom-matching: a stone/vault rope can't be
 		// used as a shortcut to dodge the trigger requirement.
-		if (this.isSealed(platform)) return false;
+		if (this.isCovered(platform)) return false;
 		if (slots.length + count > this.maxPerPlatform) return false;
 		if (this.isComplete(platform)) return false;
 		if (slots.length === 0) {
 			const type = this.platformTypes[platform];
 			return type === 'neutral' || type === element;
 		}
-		return slots[slots.length - 1].element === element;
+		const bottom = slots[slots.length - 1];
+		// Can't bury a key that still needs to reach a bottom.
+		if (bottom.key !== undefined && this.vaultSealed(bottom.key)) return false;
+		return bottom.element === element;
 	}
 
 	/** Attempts to move the group starting at `index` from one platform to another. */
@@ -154,19 +203,64 @@ export class GameEngine {
 		const remaining = this.platforms[from].slice(0, index);
 		const last = remaining[remaining.length - 1];
 		if (last && !last.revealed) {
-			remaining[remaining.length - 1] = { element: last.element, revealed: true };
+			remaining[remaining.length - 1] = { ...last, revealed: true };
 			this.lastReveal = { platform: from, index: remaining.length - 1 };
 		}
 		this.platforms[from] = remaining;
 		this.platforms[to] = [...this.platforms[to], ...group];
 		this.moves += 1;
 		this.history = [...this.history, { from, to, count: group.length }];
-		this.breakStones();
+		this.resolveSeals();
 		return true;
 	}
 
+	/** Runs stone breaks and vault opens to a fixed point (each can trigger the other). */
+	private resolveSeals(): void {
+		for (let guard = 0; guard < 8; guard++) {
+			const broke = this.breakStones();
+			const opened = this.openVaults();
+			if (!broke && !opened) break;
+		}
+	}
+
+	/**
+	 * Opens any vault whose matching-colour key is the exposed bottom of a rope,
+	 * revealing its contents and clearing the freed key so its element moves
+	 * again. Permanent, like a stone break.
+	 */
+	private openVaults(): boolean {
+		let changed = false;
+		for (let i = 0; i < this.platforms.length; i++) {
+			const color = this.lock[i];
+			if (color === null || !this.isLocked(i)) continue;
+			let keyFrom: { platform: number; index: number } | null = null;
+			const freed = this.platforms.some((slots, p) => {
+				const bi = slots.length - 1;
+				if (bi >= 0 && slots[bi].revealed && slots[bi].key === color) {
+					keyFrom = { platform: p, index: bi };
+					return true;
+				}
+				return false;
+			});
+			if (!freed) continue;
+			const hidden = this.ownHidden[i];
+			const last = this.platforms[i].length - 1;
+			this.platforms[i] = this.platforms[i].map((s, idx) => ({
+				...s,
+				revealed: !hidden.has(idx) || idx === last
+			}));
+			this.platforms = this.platforms.map((slots) =>
+				slots.map((s) => (s.key === color ? { ...s, key: undefined } : s))
+			);
+			this.lastVaultOpen = { platform: i, color, keyFrom };
+			changed = true;
+		}
+		return changed;
+	}
+
 	/** Breaks any stone seal whose required element just got completed on another platform. */
-	private breakStones(): void {
+	private breakStones(): boolean {
+		let changed = false;
 		for (let i = 0; i < this.platforms.length; i++) {
 			const need = this.stoneSecret[i];
 			if (!need || !this.isSealed(i)) continue;
@@ -181,7 +275,9 @@ export class GameEngine {
 				revealed: !hidden.has(idx) || idx === last
 			}));
 			this.lastStoneBreak = i;
+			changed = true;
 		}
+		return changed;
 	}
 
 	get canUndo(): boolean {

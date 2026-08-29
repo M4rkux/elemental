@@ -1,7 +1,9 @@
 <script lang="ts">
   import ElementIcon from "./ElementIcon.svelte";
   import ElementPiece from "./ElementPiece.svelte";
-  import type { Element, ElementSlot, PlatformType } from "$lib/game/types";
+  import KeyBadge from "./KeyBadge.svelte";
+  import VaultSeal from "./VaultSeal.svelte";
+  import type { Element, ElementSlot, KeyColor, PlatformType } from "$lib/game/types";
 
   let {
     type,
@@ -19,6 +21,8 @@
     stoneElement = null,
     sealed = false,
     stoneBreaking = false,
+    vaultColor = null,
+    vaultPhase = null,
     onGrab,
     el = $bindable(),
   }: {
@@ -46,6 +50,10 @@
     sealed?: boolean;
     /** Plays the one-shot shatter animation as the stone seal just broke. */
     stoneBreaking?: boolean;
+    /** Colour of the vault covering this platform, if any. */
+    vaultColor?: KeyColor | null;
+    /** Vault state: 'sealed' idle, or a phase of the opening sequence; null when there's no vault. */
+    vaultPhase?: "sealed" | "unlocking" | "opening" | "revealing" | null;
     onGrab: (index: number, event: PointerEvent) => void;
     el?: HTMLElement;
   } = $props();
@@ -90,7 +98,7 @@
         class:slot--lifted={hiddenFrom !== null && i >= hiddenFrom}
         class:slot--popped={poppedFrom !== null && i >= poppedFrom}
         class:slot--pickable={pickable(i)}
-        class:slot--revealing={revealingIndex === i}
+        class:slot--revealing={revealingIndex === i || vaultPhase === "revealing"}
         class:slot--entering={cascadeOrder !== null}
         style:--cascade-delay={cascadeOrder !== null
           ? `${(cascadeOrder * 3 + i) * 55}ms`
@@ -110,7 +118,10 @@
           complete={complete || i < lockedCount}
           grabbed={poppedFrom !== null && i >= poppedFrom}
         />
-        {#if revealingIndex === i}
+        {#if slot.key}
+          <KeyBadge color={slot.key} />
+        {/if}
+        {#if revealingIndex === i || vaultPhase === "revealing"}
           <span class="burst-ring"></span>
         {/if}
       </button>
@@ -162,6 +173,10 @@
           <ElementIcon element={stoneElement ?? "mystery"} />
         </span>
       </div>
+    {/if}
+
+    {#if vaultColor && vaultPhase}
+      <VaultSeal color={vaultColor} phase={vaultPhase} />
     {/if}
   </div>
 </div>

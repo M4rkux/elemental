@@ -23,6 +23,7 @@ const TAP_VOLUME = 1;
 const REVEAL_VOLUME = 0.5;
 const COMPLETE_VOLUME = 0.5;
 const STONE_BREAK_VOLUME = 0.6;
+const VAULT_UNLOCK_VOLUME = 0.6;
 
 // All players share one AudioContext (browsers cap how many a page can
 // have); each carves out its own gain node for its mix level.
@@ -199,6 +200,12 @@ export const revealSound = new OneShotPlayer("/sfx/reveal.wav", REVEAL_VOLUME);
 export const stoneBreakSound = new OneShotPlayer(
   "/sfx/rock_shattering.wav",
   STONE_BREAK_VOLUME,
+);
+
+/** Played when a vault's lock turns and its shackle springs open. */
+export const vaultUnlockSound = new OneShotPlayer(
+  "/sfx/unlocking.wav",
+  VAULT_UNLOCK_VOLUME,
 );
 
 const COMPLETE_PLAYERS: Record<Element, OneShotPlayer> = {

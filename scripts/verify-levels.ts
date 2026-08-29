@@ -1,13 +1,13 @@
 /**
  * Checks every level seed JSON in db/seeds/levels/ against the game rules:
  * solvable, not already won, no completed platform at the start, element
- * counts intact, restricted platforms starting with their own element, and
- * hidden (mystery) elements always covered.
+ * counts intact, restricted platforms starting with their own element, hidden
+ * (mystery) elements always covered, and keys/vaults well-formed.
  *
  *   bun scripts/verify-levels.ts
  */
 import { readdirSync } from 'fs';
-import { ELEMENTS, type LevelData } from '../src/lib/game/types';
+import { ELEMENTS, KEY_COLORS, type LevelData } from '../src/lib/game/types';
 import {
 	MAX_PER_PLATFORM,
 	boardFromLevel,
@@ -64,6 +64,33 @@ for (const file of files) {
 		if (platform.stoneSecret && platform.elements.length === 0) {
 			problems.push(`platform ${i} is a stone sealing nothing`);
 		}
+		if (platform.lock) {
+			if (!KEY_COLORS.includes(platform.lock)) problems.push(`platform ${i} lock colour ${platform.lock} unknown`);
+			if (platform.type !== 'neutral') problems.push(`platform ${i} lock on a restricted platform`);
+			if (platform.elements.length === 0) problems.push(`platform ${i} is a vault sealing nothing`);
+			if (platform.stoneSecret) problems.push(`platform ${i} has both a stone and a vault`);
+			if (platform.keys?.length) problems.push(`platform ${i} is both locked and holds a key`);
+		}
+		for (const k of platform.keys ?? []) {
+			if (!KEY_COLORS.includes(k.color)) problems.push(`platform ${i} key colour ${k.color} unknown`);
+			if (!Number.isInteger(k.index) || k.index < 0 || k.index >= platform.elements.length - 1) {
+				problems.push(`platform ${i} key index ${k.index} is not a covered, non-bottom element`);
+			} else if (platform.elements[k.index] === platform.elements[k.index + 1]) {
+				problems.push(`platform ${i} key at ${k.index} sits directly on its own element`);
+			}
+			if (platform.stoneSecret || platform.lock) {
+				problems.push(`platform ${i} key on a covered platform`);
+			}
+		}
+	}
+
+	// Keys and vaults must pair up one-for-one by colour.
+	const keyColors = level.data.platforms.flatMap((p) => (p.keys ?? []).map((k) => k.color));
+	const lockColors = level.data.platforms.map((p) => p.lock).filter((c): c is (typeof KEY_COLORS)[number] => !!c);
+	for (const color of KEY_COLORS) {
+		const nk = keyColors.filter((c) => c === color).length;
+		const nl = lockColors.filter((c) => c === color).length;
+		if (nk !== nl) problems.push(`colour ${color}: ${nk} key(s) but ${nl} vault(s)`);
 	}
 	if (isWon(board.stacks, board.types, restricted)) problems.push('already won at start');
 	if (board.stacks.some((s, i) => isComplete(s, board.types[i], restricted))) {

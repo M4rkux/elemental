@@ -6,8 +6,12 @@
  * picked and get revealed when they become the bottom of their rope. The
  * solver knows their true identity — the player can reach the same line with
  * undo/restart, so solver-solvable is what "solvable" means here.
+ *
+ * Vaults (`lock`) start their whole rope hidden, same as a stone. They open
+ * once the matching-colour key is the exposed bottom of any rope. A keyed
+ * element (and everything above it) can't be picked until its vault opens.
  */
-import type { Element, ElementSlot, LevelGameData, PlatformType } from '../src/lib/game/types';
+import type { Element, ElementSlot, KeyColor, LevelGameData, PlatformType } from '../src/lib/game/types';
 
 export const MAX_PER_PLATFORM = 4;
 
@@ -18,7 +22,9 @@ export interface Board {
 	stacks: Stack[];
 	/** Per platform, the element that must be completed elsewhere to break its stone seal. */
 	stoneSecret: (Element | null)[];
-	/** Per platform, indexes that stay hidden as an ordinary mystery even after a stone seal breaks. */
+	/** Per platform, the colour of the vault sealing it, if any. */
+	lock: (KeyColor | null)[];
+	/** Per platform, indexes that stay hidden as an ordinary mystery even after a stone/vault opens. */
 	hidden: number[][];
 }
 
@@ -26,25 +32,34 @@ export function boardFromLevel(data: LevelGameData): Board {
 	return {
 		types: data.platforms.map((p) => p.type),
 		stoneSecret: data.platforms.map((p) => p.stoneSecret ?? null),
+		lock: data.platforms.map((p) => p.lock ?? null),
 		hidden: data.platforms.map((p) => p.hidden ?? []),
-		stacks: data.platforms.map((p) =>
-			p.elements.map((element, i) => ({
+		stacks: data.platforms.map((p) => {
+			const slots: Stack = p.elements.map((element, i) => ({
 				element,
-				// Stone-sealed ropes start fully hidden, bottom included; otherwise
-				// the bottom of a rope is always revealed, whatever the data says.
-				revealed: p.stoneSecret ? false : !p.hidden?.includes(i) || i === p.elements.length - 1
-			}))
-		)
+				// Stone-sealed and vault-locked ropes start fully hidden, bottom
+				// included; otherwise the bottom of a rope is always revealed.
+				revealed:
+					p.stoneSecret || p.lock ? false : !p.hidden?.includes(i) || i === p.elements.length - 1
+			}));
+			for (const k of p.keys ?? []) if (slots[k.index]) slots[k.index].key = k.color;
+			return slots;
+		})
 	};
 }
 
-// The bottom slot is the sealed/broken tell: sealed forces it hidden too,
-// and breaking always reveals it (even when an ordinary mystery elsewhere on
-// the same platform stays hidden), so it can't be confused with that case.
-function isSealed(stack: Stack, need: Element | null): boolean {
-	if (need === null) return false;
+// The bottom slot is the sealed/broken tell: a stone or a vault forces it
+// hidden too, and opening always reveals it, so a covered rope can't be
+// confused with a residual ordinary mystery elsewhere on the same platform.
+function isCovered(stack: Stack, stoneNeed: Element | null, lock: KeyColor | null): boolean {
+	if (stoneNeed === null && lock === null) return false;
 	const bottom = stack[stack.length - 1];
 	return bottom !== undefined && !bottom.revealed;
+}
+
+/** True while a vault of `color` is still sealed somewhere (its rope's bottom hidden). */
+function vaultSealed(stacks: Stack[], lock: (KeyColor | null)[], color: KeyColor): boolean {
+	return stacks.some((s, i) => lock[i] === color && s[s.length - 1] !== undefined && !s[s.length - 1].revealed);
 }
 
 /** Breaks any stone seal whose required element just got completed on another platform. */
@@ -54,18 +69,64 @@ function breakStones(
 	stoneSecret: (Element | null)[],
 	hidden: number[][],
 	restricted: Set<Element>
-): Stack[] {
-	return stacks.map((stack, i) => {
+): { stacks: Stack[]; changed: boolean } {
+	let changed = false;
+	const next = stacks.map((stack, i) => {
 		const need = stoneSecret[i];
-		if (!isSealed(stack, need)) return stack;
+		if (need === null || !isCovered(stack, need, null)) return stack;
 		const satisfied = stacks.some(
 			(s, j) => j !== i && isComplete(s, types[j], restricted) && s[0].element === need
 		);
 		if (!satisfied) return stack;
+		changed = true;
 		const own = new Set(hidden[i]);
 		const last = stack.length - 1;
 		return stack.map((s, idx) => ({ ...s, revealed: !own.has(idx) || idx === last }));
 	});
+	return { stacks: next, changed };
+}
+
+/** Opens any vault whose matching key is the exposed bottom of some rope. */
+function openVaults(
+	stacks: Stack[],
+	lock: (KeyColor | null)[],
+	hidden: number[][]
+): { stacks: Stack[]; changed: boolean } {
+	let changed = false;
+	const next = stacks.map((stack, i) => {
+		const color = lock[i];
+		if (color === null || !isCovered(stack, null, color)) return stack;
+		const freed = stacks.some((s) => {
+			const b = s[s.length - 1];
+			return b !== undefined && b.revealed && b.key === color;
+		});
+		if (!freed) return stack;
+		changed = true;
+		const own = new Set(hidden[i]);
+		const last = stack.length - 1;
+		return stack.map((s, idx) => ({ ...s, revealed: !own.has(idx) || idx === last }));
+	});
+	return { stacks: next, changed };
+}
+
+/** Runs stone breaks and vault opens to a fixed point (each can trigger the other). */
+function resolve(
+	stacks: Stack[],
+	types: PlatformType[],
+	stoneSecret: (Element | null)[],
+	lock: (KeyColor | null)[],
+	hidden: number[][],
+	restricted: Set<Element>
+): Stack[] {
+	let current = stacks;
+	for (let guard = 0; guard < 8; guard++) {
+		const stones = breakStones(current, types, stoneSecret, hidden, restricted);
+		current = stones.stacks;
+		const vaults = openVaults(current, lock, hidden);
+		current = vaults.stacks;
+		if (!stones.changed && !vaults.changed) break;
+	}
+	return current;
 }
 
 export function restrictedElements(types: PlatformType[]): Set<Element> {
@@ -94,10 +155,16 @@ export function isWon(stacks: Stack[], types: PlatformType[], restricted: Set<El
 
 function stateKey(stacks: Stack[], types: PlatformType[]): string {
 	// Platforms with the same restriction are interchangeable, so sort within
-	// each type group to shrink the search space. Hidden state is part of the
-	// key: a revealed element moves, a hidden one doesn't.
+	// each type group to shrink the search space. Hidden state and key markers
+	// are part of the key: a revealed element moves, a hidden one doesn't, and
+	// a keyed element is frozen until its vault opens.
 	return stacks
-		.map((s, i) => `${types[i]}:${s.map((c) => (c.revealed ? c.element : `?${c.element}`)).join(',')}`)
+		.map(
+			(s, i) =>
+				`${types[i]}:${s
+					.map((c) => `${c.revealed ? '' : '?'}${c.element}${c.key ? `K${c.key}` : ''}`)
+					.join(',')}`
+		)
 		.sort()
 		.join('|');
 }
@@ -106,7 +173,7 @@ function stateKey(stacks: Stack[], types: PlatformType[]): string {
 function reveal(stack: Stack): Stack {
 	const last = stack[stack.length - 1];
 	if (!last || last.revealed) return stack;
-	return [...stack.slice(0, -1), { element: last.element, revealed: true }];
+	return [...stack.slice(0, -1), { element: last.element, revealed: true, ...(last.key ? { key: last.key } : {}) }];
 }
 
 /** All legal moves: [from, pickIndex, to]. */
@@ -114,13 +181,14 @@ export function legalMoves(
 	stacks: Stack[],
 	types: PlatformType[],
 	restricted: Set<Element>,
-	stoneSecret: (Element | null)[]
+	stoneSecret: (Element | null)[],
+	lock: (KeyColor | null)[]
 ): [number, number, number][] {
 	const moves: [number, number, number][] = [];
 	for (let from = 0; from < stacks.length; from++) {
 		const stack = stacks[from];
 		if (stack.length === 0 || isComplete(stack, types[from], restricted)) continue;
-		// A sealed stone (or, in principle, any stack with a hidden bottom) can't be picked from.
+		// A covered rope (stone or vault) can't be picked from.
 		if (!stack[stack.length - 1].revealed) continue;
 		const bottom = stack[stack.length - 1].element;
 		// Pickable groups are suffixes of the bottom revealed single-element run,
@@ -130,18 +198,28 @@ export function legalMoves(
 			runStart--;
 		}
 		runStart = Math.max(runStart, lockedCount(stack, types[from]));
+		// Can't lift a group that contains a key whose vault is still sealed —
+		// that pins the key (and everything above it) in place.
+		let keyFloor = 0;
+		for (let idx = 0; idx < stack.length; idx++) {
+			if (stack[idx].key && vaultSealed(stacks, lock, stack[idx].key!)) keyFloor = idx + 1;
+		}
+		runStart = Math.max(runStart, keyFloor);
 		for (let index = runStart; index < stack.length; index++) {
 			const count = stack.length - index;
 			for (let to = 0; to < stacks.length; to++) {
 				if (to === from) continue;
-				if (isSealed(stacks[to], stoneSecret[to])) continue;
+				if (isCovered(stacks[to], stoneSecret[to], lock[to])) continue;
 				const target = stacks[to];
 				if (target.length + count > MAX_PER_PLATFORM) continue;
 				if (isComplete(target, types[to], restricted)) continue;
+				const targetBottom = target[target.length - 1];
+				// Can't cover a key that still needs to reach a bottom.
+				if (targetBottom && targetBottom.key && vaultSealed(stacks, lock, targetBottom.key)) continue;
 				if (target.length === 0) {
 					// A restricted platform's first element must be its own.
 					if (types[to] !== 'neutral' && types[to] !== bottom) continue;
-				} else if (target[target.length - 1].element !== bottom) {
+				} else if (targetBottom.element !== bottom) {
 					continue;
 				}
 				moves.push([from, index, to]);
@@ -156,6 +234,14 @@ export function solve(board: Board): number {
 	const visited = new Set<string>();
 	const limit = 80;
 	const restricted = restrictedElements(board.types);
+	const start = resolve(
+		board.stacks,
+		board.types,
+		board.stoneSecret,
+		board.lock,
+		board.hidden,
+		restricted
+	);
 
 	function dfs(stacks: Stack[], depth: number): number {
 		if (isWon(stacks, board.types, restricted)) return depth;
@@ -164,17 +250,23 @@ export function solve(board: Board): number {
 		if (visited.has(key)) return -1;
 		visited.add(key);
 
-		for (const [from, index, to] of legalMoves(stacks, board.types, restricted, board.stoneSecret)) {
+		for (const [from, index, to] of legalMoves(
+			stacks,
+			board.types,
+			restricted,
+			board.stoneSecret,
+			board.lock
+		)) {
 			let next = stacks.map((s) => [...s]);
 			const group = next[from].splice(index);
 			next[from] = reveal(next[from]);
 			next[to].push(...group);
-			next = breakStones(next, board.types, board.stoneSecret, board.hidden, restricted);
+			next = resolve(next, board.types, board.stoneSecret, board.lock, board.hidden, restricted);
 			const result = dfs(next, depth + 1);
 			if (result !== -1) return result;
 		}
 		return -1;
 	}
 
-	return dfs(board.stacks, 0);
+	return dfs(start, 0);
 }

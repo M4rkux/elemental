@@ -6,8 +6,9 @@
     revealSound,
     stoneBreakSound,
     tapSound,
+    vaultUnlockSound,
   } from "$lib/game/sfx";
-  import type { Element, LevelData } from "$lib/game/types";
+  import type { Element, KeyColor, LevelData } from "$lib/game/types";
   import ElementParticles from "./ElementParticles.svelte";
   import ElementPiece from "./ElementPiece.svelte";
   import Platform from "./Platform.svelte";
@@ -85,6 +86,7 @@
     revealSound.preload();
     completeSound.preload();
     stoneBreakSound.preload();
+    vaultUnlockSound.preload();
     return () => grabSound.release();
   });
 
@@ -140,6 +142,87 @@
       breakingStone = null;
     };
   });
+
+  // A vault opens in four beats, matching the Claude Design reference: the
+  // freed key arcs to the lock (flight), the lock flashes and its shackle
+  // springs (unlocking), the box splits apart and vanishes (opening), then the
+  // contents spin into view (revealing). The engine already revealed and
+  // unkeyed everything on the triggering move; this is pure animation.
+  const VAULT_FLIGHT_MS = 650;
+  const VAULT_UNLOCK_MS = 1200;
+  const VAULT_OPEN_MS = 1900;
+  const VAULT_DONE_MS = 2900;
+
+  let vault = $state<{
+    platform: number;
+    color: KeyColor;
+    phase: "flight" | "unlocking" | "opening" | "revealing";
+  } | null>(null);
+  let keyFlight = $state<{ color: KeyColor; x: number; y: number } | null>(null);
+  let keyFlying = $state(false);
+  // While a vault plays out, only undo and the vault's own column are frozen —
+  // moves elsewhere on the board stay live.
+  let openingVault = $derived(vault !== null);
+  let openingVaultPlatform = $derived(vault?.platform ?? null);
+
+  $effect(() => {
+    const open = engine.lastVaultOpen;
+    if (!open) return;
+    const { platform, color, keyFrom } = open;
+
+    const start = keyFrom
+      ? slotTopLeft(keyFrom.platform, keyFrom.index)
+      : { x: 0, y: 0 };
+    keyFlight = { color, x: start.x, y: start.y };
+    keyFlying = false;
+    // Keep the (idle) vault box on screen through the flight — the engine has
+    // already revealed its contents, so without this it would blink away.
+    vault = { platform, color, phase: "flight" };
+    const raf = requestAnimationFrame(() => {
+      if (!keyFlight) return;
+      const el = platformEls[platform];
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      keyFlying = true;
+      keyFlight.x = rect.left + rect.width / 2 - 16;
+      keyFlight.y = rect.top + rect.height * 0.42 - 16;
+    });
+
+    const t1 = setTimeout(() => {
+      keyFlight = null;
+      vault = { platform, color, phase: "unlocking" };
+      void vaultUnlockSound.play();
+    }, VAULT_FLIGHT_MS);
+    const t2 = setTimeout(() => {
+      vault = { platform, color, phase: "opening" };
+    }, VAULT_UNLOCK_MS);
+    const t3 = setTimeout(() => {
+      vault = { platform, color, phase: "revealing" };
+      void revealSound.play();
+    }, VAULT_OPEN_MS);
+    const t4 = setTimeout(() => {
+      vault = null;
+      engine.lastVaultOpen = null;
+    }, VAULT_DONE_MS);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+      keyFlight = null;
+      vault = null;
+    };
+  });
+
+  /** Vault state to hand a platform: its live animation phase, else 'sealed' while still locked. */
+  function vaultPhaseFor(
+    i: number,
+  ): "sealed" | "unlocking" | "opening" | "revealing" | null {
+    if (vault?.platform === i) return vault.phase === "flight" ? "sealed" : vault.phase;
+    return engine.isLocked(i) ? "sealed" : null;
+  }
 
   // On entry (and restart, which remounts the board) the elements cascade
   // down their ropes. The window covers the last stagger delay + drop time;
@@ -254,6 +337,8 @@
 
   function grab(platform: number, index: number, event: PointerEvent) {
     if (engine.won || drag || !engine.canPick(platform, index)) return;
+    // The vault's own column is frozen until its open animation finishes.
+    if (platform === openingVaultPlatform) return;
     event.preventDefault();
     // Already holding a piece elsewhere: if this platform is a valid landing
     // spot, clicking one of its pieces places the floating group there
@@ -290,7 +375,7 @@
   ): number | null {
     for (let i = 0; i < platformEls.length; i++) {
       const el = platformEls[i];
-      if (!el || i === excludeFrom) continue;
+      if (!el || i === excludeFrom || i === openingVaultPlatform) continue;
       const rect = el.getBoundingClientRect();
       if (
         x >= rect.left &&
@@ -343,7 +428,8 @@
     group: Element[],
     target: number | null,
   ) {
-    if (target === null || !engine.move(from, index, target)) return;
+    if (target === null || target === openingVaultPlatform) return;
+    if (from === openingVaultPlatform || !engine.move(from, index, target)) return;
     spawnBurst(target, group[0], group.length);
     void tapSound.play();
     // Complete platforms reject drops, so completeness here means the
@@ -442,7 +528,7 @@
       <a class="hud-button glass" href="/">Menu</a>
       <button
         class="hud-button glass"
-        disabled={!engine.canUndo}
+        disabled={!engine.canUndo || openingVault}
         onclick={() => engine.undo()}
       >
         Undo
@@ -480,6 +566,8 @@
             stoneElement={engine.stoneSecret[i]}
             sealed={engine.isSealed(i)}
             stoneBreaking={breakingStone === i}
+            vaultColor={engine.lock[i]}
+            vaultPhase={vaultPhaseFor(i)}
             onGrab={(index, event) => grab(i, index, event)}
             bind:el={platformEls[i]}
           />
@@ -517,6 +605,38 @@
       <ElementParticles element={burst.element} mode="burst" />
     </div>
   {/each}
+
+  {#if keyFlight}
+    <div
+      class="key-flight"
+      style:transform="translate3d({keyFlight.x}px, {keyFlight.y}px, 0)"
+      style:transition={keyFlying
+        ? `transform ${VAULT_FLIGHT_MS}ms cubic-bezier(0.35, 0, 0.65, 1)`
+        : "none"}
+    >
+      <span
+        class="key-flight-icon"
+        style:--pc="var(--key-{keyFlight.color})"
+      >
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="27" cy="50" r="19" fill="var(--vault-gold)" />
+          <circle
+            cx="27"
+            cy="50"
+            r="18"
+            fill="none"
+            stroke="var(--vault-gold-light)"
+            stroke-width="2"
+            opacity="0.8"
+          />
+          <circle cx="27" cy="50" r="7.5" fill="var(--pc)" />
+          <rect x="40" y="44" width="50" height="12" rx="5" fill="var(--vault-gold)" />
+          <rect x="66" y="55" width="8" height="17" rx="3" fill="var(--vault-gold)" />
+          <rect x="80" y="55" width="8" height="13" rx="3" fill="var(--vault-gold)" />
+        </svg>
+      </span>
+    </div>
+  {/if}
 
   {#if showWin}
     <div class="win-overlay">
@@ -658,6 +778,45 @@
     width: 0;
     height: 0;
     pointer-events: none;
+  }
+
+  // The freed key arcing from its element to the vault's lock.
+  .key-flight {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 80;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  .key-flight-icon {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    animation: key-turn 620ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
+    filter: drop-shadow(0 0 8px var(--pc)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.7));
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  @keyframes key-turn {
+    from {
+      transform: rotate(0);
+    }
+    to {
+      transform: rotate(92deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .key-flight-icon {
+      animation: none;
+    }
   }
 
   .win-overlay {

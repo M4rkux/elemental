@@ -1,0 +1,70 @@
+{
+	"number": 41,
+	"stage": 5,
+	"name": "Twin Vaults",
+	"data": {
+		"maxPerPlatform": 4,
+		"platforms": [
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"air",
+					"earth",
+					"water"
+				],
+				"lock": "b"
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"earth",
+					"earth",
+					"fire",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 2,
+						"color": "a"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"air"
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"fire",
+					"fire",
+					"water",
+					"air"
+				],
+				"keys": [
+					{
+						"index": 1,
+						"color": "b"
+					}
+				]
+			},
+			{
+				"type": "neutral",
+				"elements": [
+					"water",
+					"earth"
+				],
+				"lock": "a"
+			}
+		]
+	}
+}

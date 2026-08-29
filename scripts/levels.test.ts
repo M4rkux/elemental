@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'fs';
 import { describe, expect, it } from 'vitest';
-import { ELEMENTS, type LevelData } from '../src/lib/game/types';
+import { ELEMENTS, KEY_COLORS, type LevelData } from '../src/lib/game/types';
 import {
 	MAX_PER_PLATFORM,
 	boardFromLevel,
@@ -77,6 +77,41 @@ describe.each(files)('%s', (file) => {
 			if (!platform.stoneSecret) continue;
 			expect(platform.type).toBe('neutral');
 			expect(platform.elements.length).toBeGreaterThan(0);
+		}
+	});
+
+	it('keeps vaults neutral, non-empty and free of stones or keys', () => {
+		for (const platform of level.data.platforms) {
+			if (!platform.lock) continue;
+			expect(KEY_COLORS).toContain(platform.lock);
+			expect(platform.type).toBe('neutral');
+			expect(platform.elements.length).toBeGreaterThan(0);
+			expect(platform.stoneSecret).toBeUndefined();
+			expect(platform.keys ?? []).toHaveLength(0);
+		}
+	});
+
+	it('keeps keys covered, off the bottom, and never on their own element', () => {
+		for (const platform of level.data.platforms) {
+			for (const k of platform.keys ?? []) {
+				expect(KEY_COLORS).toContain(k.color);
+				expect(Number.isInteger(k.index)).toBe(true);
+				expect(k.index).toBeGreaterThanOrEqual(0);
+				expect(k.index).toBeLessThan(platform.elements.length - 1);
+				expect(platform.elements[k.index]).not.toBe(platform.elements[k.index + 1]);
+				expect(platform.stoneSecret).toBeUndefined();
+				expect(platform.lock).toBeUndefined();
+			}
+		}
+	});
+
+	it('pairs every key with a vault of the same colour', () => {
+		const keyColors = level.data.platforms.flatMap((p) => (p.keys ?? []).map((k) => k.color));
+		const lockColors = level.data.platforms.map((p) => p.lock).filter(Boolean);
+		for (const color of KEY_COLORS) {
+			expect(keyColors.filter((c) => c === color).length).toBe(
+				lockColors.filter((c) => c === color).length
+			);
 		}
 	});
 
